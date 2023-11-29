@@ -41,7 +41,7 @@ When you will build, It will automatically generate strings.xml file according t
 This gradle plugin is developed based upon google translate api. It may some time not work due to frequent requests.
 
 ## What Next:
-There is need to handle symbols while translation. If you want to improve it conversion then feel free to contribute.
+There is need to handle symbols while translation. If you want to improve the conversion process then feel free to contribute.
 
 ## Buy me a cup of Tea
 If you want to support me then buy me a cup of tea:
