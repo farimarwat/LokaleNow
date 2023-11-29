@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("io.github.farimarwat.lokalenow") version  "1.0"
+    id("io.github.farimarwat.lokalenow") version "1.0"
 }
 
 android {
@@ -44,7 +44,9 @@ android {
         kotlinCompilerExtensionVersion = "1.4.3"
     }
 }
-lokalenow.listLang = listOf("fr","ar","de","ru")
+lokalenow{
+    listLang = listOf("fr","ar","ru")
+}
 
 dependencies {
 

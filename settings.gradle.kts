@@ -3,9 +3,7 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven{
-            url = uri("C:\\repo")
-        }
+
     }
 }
 dependencyResolutionManagement {
@@ -13,9 +11,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven{
-            url = uri("C:\\repo")
-        }
+
     }
 }
 
