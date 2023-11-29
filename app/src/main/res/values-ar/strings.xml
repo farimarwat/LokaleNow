@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<resources>
+    <string name="app_name">لغة الآن</string>
+    <string name="title">تطبيق الاختبار</string>
+    <string name="description">نقدم لكم Localenow، وهو مكون إضافي قوي وسهل الاستخدام مصمم لتبسيط عملية الترجمة الخاصة بك دون عناء. باستخدام Localenow، يمكنك إدارة المحتوى متعدد اللغات وتنفيذه بسهولة داخل تطبيقاتك أو مواقع الويب أو مشاريعك البرمجية. يوفر هذا البرنامج المساعد تجربة تكامل سلسة، مما يسمح لك باختبار وتحسين المحتوى المترجم الخاص بك بكفاءة. قل وداعًا للحواجز اللغوية ومرحبًا بتجربة مستخدم أكثر سلاسة ويسهل الوصول إليها مع Localenow.</string>
+    <string name="next">التالي</string>
+    <string name="previous">سابق</string>
+    <string name="login">تسجيل الدخول</string>
+</resources>
