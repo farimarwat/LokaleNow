@@ -128,7 +128,7 @@ class LDocument private constructor(builder: Builder) {
 
     //Save localized file
     fun saveLocalized(lang: String, translatedNodes: List<LNode>) {
-        val localizedValuesDir = File(mProjDir, "src/main/res/values-$lang")
+        val localizedValuesDir = File(mProjDir, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
         localizedValuesDir.mkdirs()
 
         val translatedXmlFile = File(localizedValuesDir, STRINGS_XML)
@@ -160,7 +160,7 @@ class LDocument private constructor(builder: Builder) {
     //End save localized file
 
     companion object {
-        const val PATH_VALUES = "\\src\\main\\res\\values\\"
+        val PATH_VALUES = "${File.separator}src${File.separator}main${File.separator}res${File.separator}values${File.separator}"
         const val STRINGS_XML = "strings.xml"
         const val NAME = "strings"
     }
