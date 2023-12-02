@@ -5,9 +5,7 @@ import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.io.InputStream
-import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
@@ -159,8 +157,20 @@ class LDocument private constructor(builder: Builder) {
     }
     //End save localized file
 
+    fun shouldUpdate(languageCodes: List<String>, projDir: File): Boolean {
+        for (languageCode in languageCodes) {
+            val languageFolder = File(projDir,"${PATH_RES}values-$languageCode")
+            val stringsXml = File(languageFolder, LDocument.STRINGS_XML)
+            if (!stringsXml.exists()) {
+                return true
+            }
+        }
+
+        return false
+    }
     companion object {
         val PATH_VALUES = "${File.separator}src${File.separator}main${File.separator}res${File.separator}values${File.separator}"
+        val PATH_RES = "${File.separator}src${File.separator}main${File.separator}res${File.separator}"
         const val STRINGS_XML = "strings.xml"
         const val NAME = "strings"
     }

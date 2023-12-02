@@ -19,7 +19,8 @@ abstract class LokaleNowTask: DefaultTask() {
         val ldoc = LDocument
             .Builder(file_original)
             .build()
-        if(ldoc.isModified()){
+
+        if(ldoc.isModified() || ldoc.shouldUpdate(listLang,File(path))){
             ldoc.saveCurrentHash()
             val list_string = ldoc.listElements()
             val translator = Translator.Builder()

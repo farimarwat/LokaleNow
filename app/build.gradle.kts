@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("io.github.farimarwat.lokalenow") version "1.0"
+    id("io.github.farimarwat.lokalenow") version "1.2"
 }
 
 android {
@@ -45,7 +45,7 @@ android {
     }
 }
 lokalenow{
-    listLang = listOf("fr","ar","ru")
+    listLang = listOf("fr","ar","ru","de","ja")
 }
 
 dependencies {
