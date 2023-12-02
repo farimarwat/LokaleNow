@@ -7,7 +7,7 @@ Inlclude the plugin in app level gradle
 plugins {
   ...
   ...
-  id("io.github.farimarwat.lokalenow") version "1.1"
+  id("io.github.farimarwat.lokalenow") version "1.2"
 }
 ```
 
@@ -49,6 +49,10 @@ Kindly perform these steps:
 There is need to handle symbols while translation. If you want to improve the conversion process then feel free to contribute.
 
 ## Version History
+**1.2**
+
+Minor bugs fixed
+
 **1.1**
 
 strings.xml path issue fixed for mac
