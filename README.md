@@ -7,7 +7,7 @@ Inlclude the plugin in app level gradle
 plugins {
   ...
   ...
-  id("io.github.farimarwat.lokalenow") version "1.0"
+  id("io.github.farimarwat.lokalenow") version "1.2"
 }
 ```
 
@@ -40,8 +40,26 @@ When you will build, It will automatically generate strings.xml file according t
 ## Note:
 This gradle plugin is developed based upon google translate api. It may some time not work due to frequent requests.
 
+## In case of any errors:
+Kindly perform these steps:
+1. Build>Clean Project
+2. Build>Rebuild Project
+
 ## What Next:
 There is need to handle symbols while translation. If you want to improve the conversion process then feel free to contribute.
+
+## Version History
+**1.2**
+
+Minor bugs fixed
+
+**1.1**
+
+strings.xml path issue fixed for mac
+
+**1.0**
+
+Initial commit
 
 ## Buy me a cup of Tea
 If you want to support me then buy me a cup of tea:
