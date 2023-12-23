@@ -14,6 +14,7 @@ abstract class LokaleNowTask: DefaultTask() {
 
     @TaskAction
     fun doTranslate(){
+
         val path = project.layout.projectDirectory.toString()
         val file_original = File(path)
         val ldoc = LDocument
