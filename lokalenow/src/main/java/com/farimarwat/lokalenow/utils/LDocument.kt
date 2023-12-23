@@ -55,8 +55,15 @@ class LDocument private constructor(builder: Builder) {
                     .mapNotNull { nodes.item(it) as? Element }
                     .map {
                         val name = it.getAttribute("name")
+
                         val value = it.textContent
-                        LNode(name, value)
+                        val translatable = if (it.hasAttribute("translatable")) {
+                            val translatableAtr = it.getAttributeNode("translatable")
+                            translatableAtr.value.toBoolean()
+                        } else {
+                            true
+                        }
+                        LNode(name, value, translatable)
                     }
                 )
             }
@@ -126,12 +133,16 @@ class LDocument private constructor(builder: Builder) {
 
     //Save localized file
     fun saveLocalized(lang: String, translatedNodes: List<LNode>) {
-        val localizedValuesDir = File(mProjDir, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
+        val localizedValuesDir = File(
+            mProjDir,
+            "src${File.separator}main${File.separator}res${File.separator}values-$lang"
+        )
         localizedValuesDir.mkdirs()
 
         val translatedXmlFile = File(localizedValuesDir, STRINGS_XML)
         saveXmlFile(translatedNodes, translatedXmlFile)
     }
+
     private fun saveXmlFile(nodes: List<LNode>, outputFile: File) {
         val docFactory = DocumentBuilderFactory.newInstance()
         val docBuilder = docFactory.newDocumentBuilder()
@@ -159,7 +170,7 @@ class LDocument private constructor(builder: Builder) {
 
     fun shouldUpdate(languageCodes: List<String>, projDir: File): Boolean {
         for (languageCode in languageCodes) {
-            val languageFolder = File(projDir,"${PATH_RES}values-$languageCode")
+            val languageFolder = File(projDir, "${PATH_RES}values-$languageCode")
             val stringsXml = File(languageFolder, LDocument.STRINGS_XML)
             if (!stringsXml.exists()) {
                 return true
@@ -168,9 +179,12 @@ class LDocument private constructor(builder: Builder) {
 
         return false
     }
+
     companion object {
-        val PATH_VALUES = "${File.separator}src${File.separator}main${File.separator}res${File.separator}values${File.separator}"
-        val PATH_RES = "${File.separator}src${File.separator}main${File.separator}res${File.separator}"
+        val PATH_VALUES =
+            "${File.separator}src${File.separator}main${File.separator}res${File.separator}values${File.separator}"
+        val PATH_RES =
+            "${File.separator}src${File.separator}main${File.separator}res${File.separator}"
         const val STRINGS_XML = "strings.xml"
         const val NAME = "strings"
     }
