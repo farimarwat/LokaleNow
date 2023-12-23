@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.`kotlin-dsl`
-import org.jetbrains.kotlin.load.kotlin.signatures
 plugins {
     id("maven-publish")
     `kotlin-dsl`

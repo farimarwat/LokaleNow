@@ -1,13 +1,16 @@
 # LokaleNow
-An android gradle plugin for automating localization. It will automaticall generate all strings.xml files for your desired languages.
+An android gradle plugin for automating localization. It will automatically generate all strings.xml files for your desired languages.
 
 ### Implementation
-Inlclude the plugin in app level gradle
+Include the plugin in app level gradle
 ```
 plugins {
   ...
   ...
+  // for kotlin
   id("io.github.farimarwat.lokalenow") version "1.2"
+  //for java
+  id "io.github.farimarwat.lokalenow" version "1.2"
 }
 ```
 
@@ -30,8 +33,13 @@ android{
   ...
   ...
 }
+// for kotlin
 lokalenow{
     listLang = listOf("fr","ru","ar")
+}
+// for java
+lokalenow{
+    listLang = ["fr","ru","ar"]
 }
 ```
 ## Done.

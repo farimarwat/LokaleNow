@@ -1,9 +1,11 @@
 package com.farimarwat.lokalenow.utils
 
 import com.farimarwat.lokalenow.models.LNode
+import com.google.gson.JsonParser
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import com.google.gson.JsonParser
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class Translator private constructor(builder: Builder) {
     private val nodes: List<LNode>
@@ -25,8 +27,10 @@ class Translator private constructor(builder: Builder) {
     fun translate(lang: String): List<LNode> {
         val translatedNodes = mutableListOf<LNode>()
         for (node in nodes) {
-            val translatedValue = NetworkHelper.getTranslation(lang, node.value)
-            translatedNodes.add(LNode(node.name, translatedValue ?: node.value))
+            if (node.translatable) {
+                val translatedValue = NetworkHelper.getTranslation(lang, node.value)
+                translatedNodes.add(LNode(node.name, translatedValue ?: node.value))
+            }
         }
         return translatedNodes
     }
@@ -39,7 +43,9 @@ object NetworkHelper {
     private val client = OkHttpClient()
 
     fun getTranslation(lang: String, text: String): String? {
-        val urlString = "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t&sl=en&tl=$lang&q=$text"
+        val urlEncodedString = URLEncoder.encode(text, StandardCharsets.UTF_8)
+        val urlString =
+            "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t&sl=en&tl=$lang&q=$urlEncodedString"
         val request = Request.Builder()
             .url(urlString)
             .build()
