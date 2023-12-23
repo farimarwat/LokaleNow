@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<resources>
-    <string name="app_name">اب لوکل</string>
-    <string name="title">ٹیسٹنگ ایپ</string>
-    <string name="description">Localenow ایک طاقتور اور صارف دوست پلگ ان پیش کر رہا ہے جو آپ کے لوکلائزیشن کے عمل کو آسانی سے ہموار کرنے کے لیے ڈیزائن کیا گیا ہے۔ Localenow کے ساتھ، آسانی سے اپنی ایپلیکیشنز، ویب سائٹس، یا سافٹ ویئر پروجیکٹس کے اندر کثیر لسانی مواد کا نظم اور نفاذ کریں۔ یہ پلگ ان ایک ہموار انضمام کا تجربہ پیش کرتا ہے، جس سے آپ اپنے مقامی مواد کو کارکردگی کے ساتھ جانچ اور بہتر بنا سکتے ہیں۔ زبان کی رکاوٹوں کو الوداع کہیں اور Localenow کے ساتھ ایک ہموار، زیادہ قابل رسائی صارف کے تجربے کو ہیلو کہیں۔</string>
-    <string name="next">اگلے</string>
-    <string name="previous">پچھلا</string>
-    <string name="login">لاگ ان کریں</string>
-</resources>

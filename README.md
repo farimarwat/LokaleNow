@@ -9,7 +9,7 @@ plugins {
   ...
   // for kotlin
   id("io.github.farimarwat.lokalenow") version "1.2"
-  //for java
+  //for groovy
   id "io.github.farimarwat.lokalenow" version "1.2"
 }
 ```
@@ -37,13 +37,19 @@ android{
 lokalenow{
     listLang = listOf("fr","ru","ar")
 }
-// for java
+// for groovy
 lokalenow{
     listLang = ["fr","ru","ar"]
 }
 ```
 ## Done.
 When you will build, It will automatically generate strings.xml file according to requested languages.
+
+## Exclude strings
+Use "translatable=false" for excluding any translation
+```
+<string name="details" translatable="false">This will not be translated</string>
+```
 
 ## Note:
 This gradle plugin is developed based upon google translate api. It may some time not work due to frequent requests.
@@ -56,18 +62,15 @@ Kindly perform these steps:
 ## What Next:
 There is need to handle symbols while translation. If you want to improve the conversion process then feel free to contribute.
 
+
 ## Version History
-**1.2**
+**1.3** Modified by RufenKhokhar
 
-Minor bugs fixed
+**1.2** Minor bugs fixed
 
-**1.1**
+**1.1** strings.xml path issue fixed for mac
 
-strings.xml path issue fixed for mac
-
-**1.0**
-
-Initial commit
+**1.0** Initial commit
 
 ## Buy me a cup of Tea
 If you want to support me then buy me a cup of tea:

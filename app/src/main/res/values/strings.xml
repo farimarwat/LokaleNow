@@ -5,4 +5,5 @@
     <string name="next">Next</string>
     <string name="previous">Previous</string>
     <string name="login">Login</string>
+    <string name="details" translatable="false">This will not be translated</string>
 </resources>

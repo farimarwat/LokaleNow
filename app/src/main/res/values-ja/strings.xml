@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<resources>
-    <string name="app_name">今のロケール</string>
-    <string name="title">テストアプリ</string>
-    <string name="description">Localenow は、ローカリゼーション プロセスを簡単に合理化するように設計された強力でユーザーフレンドリーなプラグインです。 Localenow を使用すると、アプリケーション、Web サイト、またはソフトウェア プロジェクト内の多言語コンテンツを簡単に管理および実装できます。このプラグインはシームレスな統合エクスペリエンスを提供し、ローカライズされたコンテンツを効率的にテストおよび最適化できるようにします。 Localenow を使用すると、言語の壁に別れを告げ、よりスムーズでアクセスしやすいユーザー エクスペリエンスを手に入れることができます。</string>
-    <string name="next">次</string>
-    <string name="previous">前の</string>
-    <string name="login">ログイン</string>
-</resources>

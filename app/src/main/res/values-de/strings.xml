@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<resources>
-    <string name="app_name">Jetzt lokalisieren</string>
-    <string name="title">Test-App</string>
-    <string name="description">Wir stellen Ihnen Localenow vor, ein leistungsstarkes und benutzerfreundliches Plugin, mit dem Sie Ihren Lokalisierungsprozess mühelos optimieren können. Mit Localenow können Sie mehrsprachige Inhalte einfach in Ihren Anwendungen, Websites oder Softwareprojekten verwalten und implementieren. Dieses Plugin bietet eine nahtlose Integrationserfahrung, sodass Sie Ihre lokalisierten Inhalte effizient testen und optimieren können. Verabschieden Sie sich von Sprachbarrieren und begrüßen Sie eine reibungslosere, zugänglichere Benutzererfahrung mit Localenow.</string>
-    <string name="next">Nächste</string>
-    <string name="previous">Vorherige</string>
-    <string name="login">Anmeldung</string>
-</resources>

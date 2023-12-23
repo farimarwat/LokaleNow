@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("io.github.farimarwat.lokalenow") version "1.2"
+    id("io.github.farimarwat.lokalenow") version "1.3"
 }
 
 android {
