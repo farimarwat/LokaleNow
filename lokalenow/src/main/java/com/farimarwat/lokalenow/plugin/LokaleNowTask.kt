@@ -33,7 +33,7 @@ abstract class LokaleNowTask: DefaultTask() {
 
             // Process each language only if it's a new language or has not been processed yet
             languages.forEach { lang ->
-                print("Translating for: $lang")
+                println("Translating for: $lang")
                 val translated = translator.translate(lang)
                 ldoc.saveLocalized(lang, translated)
             }
@@ -52,7 +52,7 @@ abstract class LokaleNowTask: DefaultTask() {
                     val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
                     val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML)
                     if(!translatedXmlFile.exists()){
-                        print("Translating for: $lang")
+                        println("Translating for: $lang")
                         val translated = translator.translate(lang)
                         ldoc.saveLocalized(lang, translated)
                     }

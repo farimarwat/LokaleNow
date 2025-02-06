@@ -116,7 +116,6 @@ class LDocument private constructor(builder: Builder) {
 
         // If the hash file exists, compare its stored hash with the current hash
         val storedHash = hashFile.readText().trim() // Ensure any extra whitespace is removed
-        println("StoredHash: $storedHash")
         return storedHash != currentHash
     }
 
