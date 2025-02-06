@@ -33,12 +33,30 @@ abstract class LokaleNowTask: DefaultTask() {
 
             // Process each language only if it's a new language or has not been processed yet
             languages.forEach { lang ->
-                // Check if the translation already exists for this language
-                val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
-                val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML)
                 print("Translating for: $lang")
                 val translated = translator.translate(lang)
                 ldoc.saveLocalized(lang, translated)
+            }
+        } else {
+            val existingFilesCount = countExistingLangDirs(path)
+            if(existingFilesCount != languages.count()){
+                ldoc.saveCurrentHash()
+                val listString = ldoc.listElements()
+                val translator = Translator.Builder()
+                    .addNodes(listString)
+                    .build()
+
+                // Process each language only if it's a new language or has not been processed yet
+                languages.forEach { lang ->
+                    // Check if the translation already exists for this language
+                    val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
+                    val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML)
+                    if(!translatedXmlFile.exists()){
+                        print("Translating for: $lang")
+                        val translated = translator.translate(lang)
+                        ldoc.saveLocalized(lang, translated)
+                    }
+                }
             }
         }
     }
@@ -68,6 +86,15 @@ abstract class LokaleNowTask: DefaultTask() {
                 deleteDirectory(langDir)
             }
         }
+    }
+    fun countExistingLangDirs(projectPath: String): Int {
+        val resDir = File(projectPath, "src${File.separator}main${File.separator}res")
+
+        val existingLangDirs = resDir.listFiles { file ->
+            file.isDirectory && file.name.startsWith("values-")
+        }?.map { it.name.substringAfter("values-") } ?: emptyList()
+
+        return existingLangDirs.size
     }
 
     /**
