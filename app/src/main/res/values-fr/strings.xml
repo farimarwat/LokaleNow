@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Locale maintenant</string>
     <string name="title">Application de test</string>
-    <string name="description">Présentation de Localinow un plugin puissant et convivial conçu pour rationaliser votre processus de localisation sans effort. Avec LocaliNow, gérez et implémentez facilement du contenu multilingue dans vos applications, sites Web ou projets logiciels. Ce plugin offre une expérience d'intégration transparente, vous permettant de tester et d'optimiser votre contenu localisé avec efficacité. Dites au revoir aux barrières linguistiques et bonjour à une expérience utilisateur plus lisse et plus accessible avec Localinow.</string>
+    <string name="description">Présentation de Localinow un plugin puissant et convivial conçu pour rationaliser votre processus de localisation sans effort. Avec LocaliNow, gérez et implémentez facilement du contenu multilingue dans vos applications, sites Web ou projets logiciels. Ce plugin offre une expérience d &amp;apos;intégration transparente, vous permettant de tester et d &amp;apos;optimiser votre contenu localisé avec efficacité. Dites au revoir aux barrières linguistiques et bonjour à une expérience utilisateur plus lisse et plus accessible avec Localinow.</string>
     <string name="next">Quoi de suivi?</string>
     <string name="previous">Précédent =</string>
     <string name="login">Connexion et profiter</string>
