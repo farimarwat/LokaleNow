@@ -55,7 +55,7 @@ object NetworkHelper {
 
             // Parse JSON using Gson JsonParser
             val jsonArray = JsonParser.parseString(jsonResponse).asJsonArray
-            return sanitizeXmlString(jsonArray.firstOrNull()?.asString)
+            return jsonArray.firstOrNull()?.asString
         } catch (e: Exception) {
             e.printStackTrace()
         }

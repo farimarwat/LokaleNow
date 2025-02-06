@@ -2,8 +2,8 @@
     <string name="app_name">Locale Now</string>
     <string name="title">Testing App</string>
     <string name="description">Introducing Localenow a powerful and user-friendly plugin designed to streamline your localization process effortlessly. With Localenow, easily manage and implement multilingual content within your applications, websites, or software projects. This plugin offers a seamless integration experience, allowing you to test and optimize your localized content with efficiency. Say goodbye to language barriers and hello to a smoother, more accessible user experience with Localenow.</string>
-    <string name="next">Next</string>
-    <string name="previous">Previous</string>
-    <string name="login">Login</string>
+    <string name="next">What Next?</string>
+    <string name="previous">Previous =</string>
+    <string name="login">Login &amp; Enjoy</string>
     <string name="details" translatable="false">This will not be translated</string>
 </resources>
