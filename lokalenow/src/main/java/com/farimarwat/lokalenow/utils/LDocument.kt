@@ -13,6 +13,17 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
+/**
+ * A class that provides functionality for handling XML documents related to localization,
+ * specifically managing strings.xml files, hash calculations for modification detection,
+ * and saving localized versions of XML files.
+ *
+ * @property mProjDir The project directory containing the XML files.
+ * @property mStringsFile The localized strings.xml file.
+ * @property mOriginalXmlFile The original strings.xml file.
+ * @property mDocument The XML document object created from the strings.xml file.
+ * @property mInputStream Input stream, not currently used in the class.
+ */
 class LDocument private constructor(builder: Builder) {
     private val mProjDir: File
     private val mStringsFile: File
@@ -20,7 +31,17 @@ class LDocument private constructor(builder: Builder) {
     private val mDocument: Document?
     private val mInputStream: InputStream?
 
+    /**
+     * Builder pattern for constructing an [LDocument] instance.
+     *
+     * @property projDir The project directory containing the XML files.
+     */
     class Builder(val projDir: File) {
+        /**
+         * Builds and returns an instance of [LDocument].
+         *
+         * @return The created [LDocument] instance.
+         */
         fun build(): LDocument = LDocument(this)
     }
 
@@ -46,6 +67,12 @@ class LDocument private constructor(builder: Builder) {
         mInputStream = null
     }
 
+    /**
+     * Lists all elements in the XML document, converting them into [LNode] objects.
+     * The elements include attributes like `name`, `value`, and `translatable`.
+     *
+     * @return A list of [LNode] objects representing the XML elements.
+     */
     fun listElements(): List<LNode> {
         val list = mutableListOf<LNode>()
         try {
@@ -55,7 +82,6 @@ class LDocument private constructor(builder: Builder) {
                     .mapNotNull { nodes.item(it) as? Element }
                     .map {
                         val name = it.getAttribute("name")
-
                         val value = it.textContent
                         val translatable = if (it.hasAttribute("translatable")) {
                             val translatableAtr = it.getAttributeNode("translatable")
@@ -73,7 +99,12 @@ class LDocument private constructor(builder: Builder) {
         return list
     }
 
-    // Modification detection
+    /**
+     * Determines whether the strings.xml file has been modified by comparing the current
+     * file hash with the stored hash.
+     *
+     * @return `true` if the file has been modified, otherwise `false`.
+     */
     fun isModified(): Boolean {
         val hashFile = getHashFile()
         val currentHash = calculateFileHash(mStringsFile)
@@ -85,6 +116,9 @@ class LDocument private constructor(builder: Builder) {
         return true
     }
 
+    /**
+     * Saves the current hash of the strings.xml file to detect modifications later.
+     */
     fun saveCurrentHash() {
         val hashFile = getHashFile()
         val currentHash = calculateFileHash(mStringsFile)
@@ -92,12 +126,22 @@ class LDocument private constructor(builder: Builder) {
         saveOriginalXml()
     }
 
+    /**
+     * Returns the file used to store the hash of the strings.xml file.
+     *
+     * @return The hash file.
+     */
     private fun getHashFile(): File {
         val hashDir = getHashDirectory()
         val hashFileName = "${mStringsFile.nameWithoutExtension}.hash"
         return File(hashDir, hashFileName)
     }
 
+    /**
+     * Returns the directory used for storing hash files.
+     *
+     * @return The hash directory.
+     */
     private fun getHashDirectory(): File {
         val buildDir = File(mProjDir, "build")
         buildDir.mkdirs()
@@ -107,6 +151,12 @@ class LDocument private constructor(builder: Builder) {
         return hashDir
     }
 
+    /**
+     * Calculates the SHA-256 hash of the specified file.
+     *
+     * @param file The file to calculate the hash for.
+     * @return The calculated hash as a hexadecimal string.
+     */
     private fun calculateFileHash(file: File): String {
         val digest = MessageDigest.getInstance("SHA-256")
         val buffer = ByteArray(8192)
@@ -119,19 +169,30 @@ class LDocument private constructor(builder: Builder) {
         return digest.digest().encodeHex()
     }
 
+    /**
+     * Saves the original strings.xml file to the hash directory.
+     */
     fun saveOriginalXml() {
         val hashDir = getHashDirectory()
         val originalXmlFile = File(hashDir, STRINGS_XML)
         mStringsFile.copyTo(originalXmlFile, true)
     }
 
+    /**
+     * Encodes the byte array as a hexadecimal string.
+     *
+     * @return The hexadecimal representation of the byte array.
+     */
     private fun ByteArray.encodeHex(): String {
         return joinToString("") { "%02x".format(it) }
     }
 
-    //End Modification
-
-    //Save localized file
+    /**
+     * Saves the localized version of the XML file with translated string values.
+     *
+     * @param lang The language code for the localization (e.g., "en", "fr").
+     * @param translatedNodes A list of translated [LNode] objects.
+     */
     fun saveLocalized(lang: String, translatedNodes: List<LNode>) {
         val localizedValuesDir = File(
             mProjDir,
@@ -143,6 +204,12 @@ class LDocument private constructor(builder: Builder) {
         saveXmlFile(translatedNodes, translatedXmlFile)
     }
 
+    /**
+     * Saves the XML file with the specified list of nodes to the provided output file.
+     *
+     * @param nodes The list of [LNode] objects to save.
+     * @param outputFile The output file to save the XML content to.
+     */
     private fun saveXmlFile(nodes: List<LNode>, outputFile: File) {
         val docFactory = DocumentBuilderFactory.newInstance()
         val docBuilder = docFactory.newDocumentBuilder()
@@ -166,8 +233,15 @@ class LDocument private constructor(builder: Builder) {
 
         transformer.transform(source, result)
     }
-    //End save localized file
 
+    /**
+     * Determines whether a localization update is needed based on the presence of the
+     * strings.xml file for the specified language codes.
+     *
+     * @param languageCodes A list of language codes to check.
+     * @param projDir The project directory to check for the existence of the localized files.
+     * @return `true` if an update is needed, otherwise `false`.
+     */
     fun shouldUpdate(languageCodes: List<String>, projDir: File): Boolean {
         for (languageCode in languageCodes) {
             val languageFolder = File(projDir, "${PATH_RES}values-$languageCode")
@@ -181,11 +255,11 @@ class LDocument private constructor(builder: Builder) {
     }
 
     companion object {
+        const val STRINGS_XML = "strings.xml"
+        const val NAME = "strings"
         val PATH_VALUES =
             "${File.separator}src${File.separator}main${File.separator}res${File.separator}values${File.separator}"
         val PATH_RES =
             "${File.separator}src${File.separator}main${File.separator}res${File.separator}"
-        const val STRINGS_XML = "strings.xml"
-        const val NAME = "strings"
     }
 }

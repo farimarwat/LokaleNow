@@ -10,24 +10,22 @@ import java.io.File
 
 abstract class LokaleNowTask: DefaultTask() {
     @get:Input
-    var listLang = listOf<String>()
+    var languages = listOf<String>()
 
     @TaskAction
     fun doTranslate(){
-
         val path = project.layout.projectDirectory.toString()
         val file_original = File(path)
         val ldoc = LDocument
             .Builder(file_original)
             .build()
-
-        if(ldoc.isModified() || ldoc.shouldUpdate(listLang,File(path))){
+        if(ldoc.isModified() || ldoc.shouldUpdate(languages,File(path))){
             ldoc.saveCurrentHash()
             val list_string = ldoc.listElements()
             val translator = Translator.Builder()
                 .addNodes(list_string)
                 .build()
-           listLang.forEach{lang->
+           languages.forEach{ lang->
                println("Translating for: ${lang.uppercase()}")
                val translated = translator.translate(lang)
                ldoc.saveLocalized(lang,translated)
