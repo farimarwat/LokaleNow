@@ -13,26 +13,40 @@ abstract class LokaleNowTask: DefaultTask() {
     var languages = listOf<String>()
 
     @TaskAction
-    fun doTranslate(){
+    fun doTranslate() {
         val path = project.layout.projectDirectory.toString()
-        val filePath= File(path)
+        val filePath = File(path)
         val ldoc = LDocument
             .Builder(filePath)
             .build()
+
+        // Clean up old languages (removes unused ones)
         cleanUpOldLanguages(path)
-        if(ldoc.isModified() || ldoc.shouldUpdate(languages,File(path))){
+
+        // Check if the document is modified or if we need to update the languages
+        if (ldoc.isModified() || ldoc.shouldUpdate(languages, File(path))) {
             ldoc.saveCurrentHash()
-            val list_string = ldoc.listElements()
+            val listString = ldoc.listElements()
             val translator = Translator.Builder()
-                .addNodes(list_string)
+                .addNodes(listString)
                 .build()
-           languages.forEach{ lang->
-               println("Translating for: ${lang.uppercase()}")
-               val translated = translator.translate(lang)
-               ldoc.saveLocalized(lang,translated)
-           }
+
+            // Process each language only if it's a new language or has not been processed yet
+            languages.forEach { lang ->
+                // Check if the translation already exists for this language
+                val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
+                val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML)
+
+                // If the language does not exist or needs to be updated, generate translations
+                if (!translatedXmlFile.exists() || ldoc.isModified()) {
+                    print("Translating for: $lang")
+                    val translated = translator.translate(lang)
+                    ldoc.saveLocalized(lang, translated)
+                }
+            }
         }
     }
+
 
     /**
      * Cleans up old language folders that are no longer required.
