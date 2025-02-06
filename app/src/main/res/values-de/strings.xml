@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<resources>
-    <string name="app_name">Gebietsschema jetzt</string>
-    <string name="title">Test -App</string>
-    <string name="description">Einführung von LocalEnow Ein leistungsstarkes und benutzerfreundliches Plugin, das Ihren Lokalisierungsprozess mühelos optimieren soll. Verwalten und implementieren Sie mit LocalEnow mehrsprachige Inhalte in Ihren Anwendungen, Websites oder Softwareprojekten. Dieses Plugin bietet ein nahtloses Integrationserlebnis, mit dem Sie Ihre lokalisierten Inhalte mit Effizienz testen und optimieren können. Verabschieden Sie sich von Sprachbarrieren und Hallo zu einer reibungsloseren, zugänglicheren Benutzererfahrung mit LocalEnow.</string>
-    <string name="next">Nächste</string>
-    <string name="previous">Vorherige</string>
-    <string name="login">Login</string>
-</resources>
