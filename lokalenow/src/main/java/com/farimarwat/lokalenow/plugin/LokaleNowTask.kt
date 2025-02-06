@@ -24,7 +24,7 @@ abstract class LokaleNowTask: DefaultTask() {
         cleanUpOldLanguages(path)
 
         // Check if the document is modified or if we need to update the languages
-        if (ldoc.isModified() || ldoc.shouldUpdate(languages, File(path))) {
+        if (ldoc.isModified()) {
             ldoc.saveCurrentHash()
             val listString = ldoc.listElements()
             val translator = Translator.Builder()
@@ -36,13 +36,9 @@ abstract class LokaleNowTask: DefaultTask() {
                 // Check if the translation already exists for this language
                 val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
                 val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML)
-
-                // If the language does not exist or needs to be updated, generate translations
-                if (!translatedXmlFile.exists() || ldoc.isModified()) {
-                    print("Translating for: $lang")
-                    val translated = translator.translate(lang)
-                    ldoc.saveLocalized(lang, translated)
-                }
+                print("Translating for: $lang")
+                val translated = translator.translate(lang)
+                ldoc.saveLocalized(lang, translated)
             }
         }
     }

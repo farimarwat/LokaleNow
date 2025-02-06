@@ -47,7 +47,7 @@ android {
     
 }
 lokalenow{
-    languages = listOf("fr","ar","ur")
+    languages = listOf("ur","fr","ar")
 }
 
 dependencies {

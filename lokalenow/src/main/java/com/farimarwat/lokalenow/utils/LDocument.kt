@@ -109,12 +109,17 @@ class LDocument private constructor(builder: Builder) {
         val hashFile = getHashFile()
         val currentHash = calculateFileHash(mStringsFile)
 
-        if (hashFile.exists()) {
-            val storedHash = hashFile.readText()
-            return storedHash != currentHash
+        // If the hash file does not exist (e.g., it was deleted during clean project)
+        if (!hashFile.exists()) {
+            return true // Consider the file modified if the hash file is missing
         }
-        return true
+
+        // If the hash file exists, compare its stored hash with the current hash
+        val storedHash = hashFile.readText().trim() // Ensure any extra whitespace is removed
+        println("StoredHash: $storedHash")
+        return storedHash != currentHash
     }
+
 
     /**
      * Saves the current hash of the strings.xml file to detect modifications later.
