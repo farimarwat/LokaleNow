@@ -8,9 +8,9 @@ plugins {
   ...
   ...
   // for kotlin
-  id("io.github.farimarwat.lokalenow") version "1.3"
+  id("io.github.farimarwat.lokalenow") version "1.4"
   //for groovy
-  id "io.github.farimarwat.lokalenow" version "1.3"
+  id "io.github.farimarwat.lokalenow" version "1.4"
 }
 ```
 
@@ -35,11 +35,11 @@ android{
 }
 // for kotlin
 lokalenow{
-    listLang = listOf("fr","ru","ar")
+     languages = listOf("fr","ru","ar")
 }
 // for groovy
 lokalenow{
-    listLang = ["fr","ru","ar"]
+     languages = ["fr","ru","ar"]
 }
 ```
 ## Done.
@@ -64,6 +64,11 @@ There is need to handle symbols while translation. If you want to improve the co
 
 
 ## Version History
+**1.4**
+1. Fixed encoding issues
+2. Old file delete issue
+
+
 **1.3** Modified by RufenKhokhar
 
 **1.2** Minor bugs fixed
