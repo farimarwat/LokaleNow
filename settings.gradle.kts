@@ -3,8 +3,8 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven{
-            url = uri("C:\\repo")
+        maven {
+            url = uri(file("${System.getProperty("user.home")}/repo"))
         }
 
     }
@@ -14,8 +14,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven{
-            url = uri("C:\\repo")
+        maven {
+            url = uri(file("${System.getProperty("user.home")}/repo"))
         }
     }
 }

@@ -28,7 +28,7 @@ group = extra["PUBLISH_GROUP_ID"] as String
 publishing{
     repositories {
         maven {
-            url = uri("C:\\repo")
+            url = uri(file("${System.getProperty("user.home")}/repo"))
         }
     }
 }
@@ -47,8 +47,8 @@ gradlePlugin {
     }
 }
 dependencies {
-    implementation("com.android.tools.build:gradle:7.4.0-rc03")
+    implementation("com.android.tools.build:gradle:7.4.2")
     //implementation("org.javassist:javassist:3.29.2-GA")
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation ("com.google.code.gson:gson:2.10.1")
 }
