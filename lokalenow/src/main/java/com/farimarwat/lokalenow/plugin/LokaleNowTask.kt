@@ -1,6 +1,6 @@
 package com.farimarwat.lokalenow.plugin
 
-import com.farimarwat.lokalenow.utils.LDocument
+import com.farimarwat.lokalenow.models.PrimaryStringDocument
 import com.farimarwat.lokalenow.utils.Translator
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
@@ -16,7 +16,7 @@ abstract class LokaleNowTask: DefaultTask() {
     fun doTranslate() {
         val path = project.layout.projectDirectory.toString()
         val filePath = File(path)
-        val ldoc = LDocument
+        val ldoc = PrimaryStringDocument
             .Builder(filePath)
             .build()
 
@@ -25,8 +25,9 @@ abstract class LokaleNowTask: DefaultTask() {
 
         // Check if the document is modified or if we need to update the languages
         if (ldoc.isModified()) {
-            ldoc.saveCurrentHash()
-            val listString = ldoc.listElements()
+            ldoc.saveHashes()
+            val listString = if(ldoc.getModifiedNodes() != null) ldoc.getModifiedNodes() else ldoc.getAllNodes()
+            if(listString == null) return
             val translator = Translator.Builder()
                 .addNodes(listString)
                 .build()
@@ -40,8 +41,9 @@ abstract class LokaleNowTask: DefaultTask() {
         }
         val existingFilesCount = countExistingLangDirs(path)
         if(existingFilesCount != languages.count()){
-            ldoc.saveCurrentHash()
-            val listString = ldoc.listElements()
+            ldoc.saveHashes()
+            val listString = ldoc.getAllNodes()
+            if(listString == null) return
             val translator = Translator.Builder()
                 .addNodes(listString)
                 .build()
@@ -50,7 +52,7 @@ abstract class LokaleNowTask: DefaultTask() {
             languages.forEach { lang ->
                 // Check if the translation already exists for this language
                 val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
-                val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML_FILE_NAME)
+                val translatedXmlFile = File(langFolder, PrimaryStringDocument.STRINGS_XML_FILE_NAME)
                 if(!translatedXmlFile.exists()){
                     println("Translating for: $lang")
                     val translated = translator.translate(lang)
