@@ -1,6 +1,6 @@
-package com.farimarwat.lokalenow.utils
+package com.farimarwat.lokalenow.models
 
-import com.farimarwat.lokalenow.models.LNode
+import com.farimarwat.lokalenow.utils.calculateFileHash
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.File
@@ -24,29 +24,29 @@ import javax.xml.transform.stream.StreamResult
  * @property mDocument The XML document object created from the strings.xml file.
  * @property mInputStream Input stream, not currently used in the class.
  */
-class LDocument private constructor(builder: Builder) {
+class PrimaryStringDocument private constructor(builder: Builder) {
     private val mProjDir: File
     private val mStringsFile: File
     private val mDocument: Document?
     private val mInputStream: InputStream?
 
     /**
-     * Builder pattern for constructing an [LDocument] instance.
+     * Builder pattern for constructing an [PrimaryStringDocument] instance.
      *
      * @property projDir The project directory containing the XML files.
      */
     class Builder(val projDir: File) {
         /**
-         * Builds and returns an instance of [LDocument].
+         * Builds and returns an instance of [PrimaryStringDocument].
          *
-         * @return The created [LDocument] instance.
+         * @return The created [PrimaryStringDocument] instance.
          */
-        fun build(): LDocument = LDocument(this)
+        fun build(): PrimaryStringDocument = PrimaryStringDocument(this)
     }
 
     init {
         mProjDir = builder.projDir
-        mStringsFile = File("${mProjDir}${VALUES_PATH}${STRINGS_XML_FILE_NAME}")
+        mStringsFile = File("${mProjDir}$VALUES_PATH$STRINGS_XML_FILE_NAME")
         mDocument = try {
             val factory = DocumentBuilderFactory.newInstance()
             val documentBuilder = factory.newDocumentBuilder()
@@ -99,8 +99,8 @@ class LDocument private constructor(builder: Builder) {
      * @return `true` if the file has been modified, otherwise `false`.
      */
     fun isModified(): Boolean {
-        val hashFile = getHashFile()
-        val currentHash = calculateFileHash(mStringsFile)
+        val hashFile = getHashFile(STRINGS_XML_HASH_FILE_NAME)
+        val currentHash = mStringsFile.calculateFileHash()
 
         // If the hash file does not exist (e.g., it was deleted during clean project)
         if (!hashFile.exists()) {
@@ -116,21 +116,32 @@ class LDocument private constructor(builder: Builder) {
     /**
      * Saves the current hash of the strings.xml file to detect modifications later.
      */
-    fun saveCurrentHash() {
-        val hashFile = getHashFile()
-        val currentHash = calculateFileHash(mStringsFile)
+    fun saveCurrentFileHash() {
+        val hashFile = getHashFile(STRINGS_XML_HASH_FILE_NAME)
+        val currentHash = mStringsFile.calculateFileHash()
         hashFile.writeText(currentHash)
-        //saveOriginalXml()
+        saveNodeHashes()
     }
+
+    private fun saveNodeHashes() {
+        val nodeHashFile = getHashFile(NODES_HASH_FILE_NAME)
+        val nodes = listElements()
+        val content = nodes.joinToString("\n") { "${it.name}:${it.value.hashCode()}" }
+        try {
+            nodeHashFile.writeText(content)
+        } catch (e: Exception) {
+            println("Error writing to file: ${e.message}")
+        }
+    }
+
 
     /**
      * Returns the file used to store the hash of the strings.xml file.
      *
      * @return The hash file.
      */
-    private fun getHashFile(): File {
+    private fun getHashFile(hashFileName:String): File {
         val hashDir = getHashDirectory()
-        val hashFileName = "${mStringsFile.nameWithoutExtension}.hash"
         return File(hashDir, hashFileName)
     }
 
@@ -148,33 +159,9 @@ class LDocument private constructor(builder: Builder) {
         return hashDir
     }
 
-    /**
-     * Calculates the SHA-256 hash of the specified file.
-     *
-     * @param file The file to calculate the hash for.
-     * @return The calculated hash as a hexadecimal string.
-     */
-    private fun calculateFileHash(file: File): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        val buffer = ByteArray(8192)
-        FileInputStream(file).use { inputStream ->
-            var bytesRead: Int
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                digest.update(buffer, 0, bytesRead)
-            }
-        }
-        return digest.digest().encodeHex()
-    }
 
 
-    /**
-     * Encodes the byte array as a hexadecimal string.
-     *
-     * @return The hexadecimal representation of the byte array.
-     */
-    private fun ByteArray.encodeHex(): String {
-        return joinToString("") { "%02x".format(it) }
-    }
+
 
     /**
      * Saves the localized version of the XML file with translated string values.
@@ -225,6 +212,8 @@ class LDocument private constructor(builder: Builder) {
 
     companion object {
         const val STRINGS_XML_FILE_NAME = "strings.xml"
+        const val STRINGS_XML_HASH_FILE_NAME = "strings.hash"
+        const val NODES_HASH_FILE_NAME = "nodes.hash"
         val VALUES_PATH =
             "${File.separator}src${File.separator}main${File.separator}res${File.separator}values${File.separator}"
         val PATH_RES =
