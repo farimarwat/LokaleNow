@@ -50,7 +50,7 @@ abstract class LokaleNowTask: DefaultTask() {
             languages.forEach { lang ->
                 // Check if the translation already exists for this language
                 val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
-                val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML)
+                val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML_FILE_NAME)
                 if(!translatedXmlFile.exists()){
                     println("Translating for: $lang")
                     val translated = translator.translate(lang)

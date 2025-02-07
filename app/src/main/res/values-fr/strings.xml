@@ -8,5 +8,5 @@
     <string name="login">Connexion et profiter</string>
     <string name="details">Ce ne sera pas traduit</string>
     <string name="test">C &amp;apos;est mon test</string>
-    <string name="change">Ceci est mon nouveau changement. aimez-vous?</string>
+    <string name="mychange">Ceci est mon nouveau changement. aimez-vous?</string>
 </resources>

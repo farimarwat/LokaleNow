@@ -27,7 +27,6 @@ import javax.xml.transform.stream.StreamResult
 class LDocument private constructor(builder: Builder) {
     private val mProjDir: File
     private val mStringsFile: File
-    private val mOriginalXmlFile: File
     private val mDocument: Document?
     private val mInputStream: InputStream?
 
@@ -47,18 +46,12 @@ class LDocument private constructor(builder: Builder) {
 
     init {
         mProjDir = builder.projDir
-        mStringsFile = File("${mProjDir}${PATH_VALUES}${STRINGS_XML}")
-        mOriginalXmlFile = File("${mProjDir}${PATH_VALUES}${STRINGS_XML}")
-
-        // Copy the original XML file to the "hashes" directory
-        val hashDir = getHashDirectory()
-        mStringsFile.copyTo(File(hashDir, STRINGS_XML), true)
-
+        mStringsFile = File("${mProjDir}${VALUES_PATH}${STRINGS_XML_FILE_NAME}")
         mDocument = try {
             val factory = DocumentBuilderFactory.newInstance()
-            val dbuilder = factory.newDocumentBuilder()
+            val documentBuilder = factory.newDocumentBuilder()
             FileInputStream(mStringsFile).use { stream ->
-                dbuilder.parse(stream)
+                documentBuilder.parse(stream)
             }
         } catch (ex: Exception) {
             println("Error creating LDocument: $ex")
@@ -178,7 +171,7 @@ class LDocument private constructor(builder: Builder) {
      */
     fun saveOriginalXml() {
         val hashDir = getHashDirectory()
-        val originalXmlFile = File(hashDir, STRINGS_XML)
+        val originalXmlFile = File(hashDir, STRINGS_XML_FILE_NAME)
         mStringsFile.copyTo(originalXmlFile, true)
     }
 
@@ -204,7 +197,7 @@ class LDocument private constructor(builder: Builder) {
         )
         localizedValuesDir.mkdirs()
 
-        val translatedXmlFile = File(localizedValuesDir, STRINGS_XML)
+        val translatedXmlFile = File(localizedValuesDir, STRINGS_XML_FILE_NAME)
         saveXmlFile(translatedNodes, translatedXmlFile)
     }
 
@@ -238,30 +231,9 @@ class LDocument private constructor(builder: Builder) {
         transformer.transform(source, result)
     }
 
-    /**
-     * Determines whether a localization update is needed based on the presence of the
-     * strings.xml file for the specified language codes.
-     *
-     * @param languageCodes A list of language codes to check.
-     * @param projDir The project directory to check for the existence of the localized files.
-     * @return `true` if an update is needed, otherwise `false`.
-     */
-    fun shouldUpdate(languageCodes: List<String>, projDir: File): Boolean {
-        for (languageCode in languageCodes) {
-            val languageFolder = File(projDir, "${PATH_RES}values-$languageCode")
-            val stringsXml = File(languageFolder, LDocument.STRINGS_XML)
-            if (!stringsXml.exists()) {
-                return true
-            }
-        }
-
-        return false
-    }
-
     companion object {
-        const val STRINGS_XML = "strings.xml"
-        const val NAME = "strings"
-        val PATH_VALUES =
+        const val STRINGS_XML_FILE_NAME = "strings.xml"
+        val VALUES_PATH =
             "${File.separator}src${File.separator}main${File.separator}res${File.separator}values${File.separator}"
         val PATH_RES =
             "${File.separator}src${File.separator}main${File.separator}res${File.separator}"
