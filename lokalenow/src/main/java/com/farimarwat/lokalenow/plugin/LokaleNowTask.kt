@@ -37,25 +37,24 @@ abstract class LokaleNowTask: DefaultTask() {
                 val translated = translator.translate(lang)
                 ldoc.saveLocalized(lang, translated)
             }
-        } else {
-            val existingFilesCount = countExistingLangDirs(path)
-            if(existingFilesCount != languages.count()){
-                ldoc.saveCurrentHash()
-                val listString = ldoc.listElements()
-                val translator = Translator.Builder()
-                    .addNodes(listString)
-                    .build()
+        }
+        val existingFilesCount = countExistingLangDirs(path)
+        if(existingFilesCount != languages.count()){
+            ldoc.saveCurrentHash()
+            val listString = ldoc.listElements()
+            val translator = Translator.Builder()
+                .addNodes(listString)
+                .build()
 
-                // Process each language only if it's a new language or has not been processed yet
-                languages.forEach { lang ->
-                    // Check if the translation already exists for this language
-                    val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
-                    val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML)
-                    if(!translatedXmlFile.exists()){
-                        println("Translating for: $lang")
-                        val translated = translator.translate(lang)
-                        ldoc.saveLocalized(lang, translated)
-                    }
+            // Process each language only if it's a new language or has not been processed yet
+            languages.forEach { lang ->
+                // Check if the translation already exists for this language
+                val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
+                val translatedXmlFile = File(langFolder, LDocument.STRINGS_XML)
+                if(!translatedXmlFile.exists()){
+                    println("Translating for: $lang")
+                    val translated = translator.translate(lang)
+                    ldoc.saveLocalized(lang, translated)
                 }
             }
         }
