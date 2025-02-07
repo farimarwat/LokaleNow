@@ -120,7 +120,7 @@ class LDocument private constructor(builder: Builder) {
         val hashFile = getHashFile()
         val currentHash = calculateFileHash(mStringsFile)
         hashFile.writeText(currentHash)
-        saveOriginalXml()
+        //saveOriginalXml()
     }
 
     /**
@@ -166,14 +166,6 @@ class LDocument private constructor(builder: Builder) {
         return digest.digest().encodeHex()
     }
 
-    /**
-     * Saves the original strings.xml file to the hash directory.
-     */
-    fun saveOriginalXml() {
-        val hashDir = getHashDirectory()
-        val originalXmlFile = File(hashDir, STRINGS_XML_FILE_NAME)
-        mStringsFile.copyTo(originalXmlFile, true)
-    }
 
     /**
      * Encodes the byte array as a hexadecimal string.

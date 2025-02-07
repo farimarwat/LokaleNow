@@ -7,5 +7,5 @@
     <string name="login">Login &amp; Enjoy</string>
     <string name="details">This will not be translated</string>
     <string name="test">This is my test</string>
-    <string name="mychange">This is my new change. do you like it?</string>
+    <string name="change">This is my new change. do you like it?</string>
 </resources>

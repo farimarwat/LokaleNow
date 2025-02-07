@@ -8,5 +8,5 @@
     <string name="login">تسجيل الدخول والتمتع</string>
     <string name="details">لن يتم ترجمة هذا</string>
     <string name="test">هذا هو اختباري</string>
-    <string name="mychange">هذا هو تغيري الجديد. هل أحببت ذلك؟</string>
+    <string name="change">هذا هو تغيري الجديد. هل أحببت ذلك؟</string>
 </resources>
