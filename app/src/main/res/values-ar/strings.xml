@@ -6,10 +6,5 @@
   <string name="next">ماذا بعد؟</string>
   <string name="previous">السابق =</string>
   <string name="login">تسجيل الدخول والتمتع</string>
-  <string name="details">لن يتم ترجمة هذا</string>
-  <string name="test">هذا هو اختباري لا شيء أفعله</string>
-  <string name="newchange">مرحبا هذا تغيير جديد</string>
-  <string name="mychange">هذا أنا</string>
-  <string name="mylastchange">هل هذا يعمل؟</string>
-  <string name="thisapp">في الحقيقة! أنا لا أحب هذا</string>
+  <string name="about">كل شيء عني</string>
 </resources>

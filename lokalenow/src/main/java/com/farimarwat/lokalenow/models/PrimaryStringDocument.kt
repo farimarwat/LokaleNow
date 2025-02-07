@@ -32,6 +32,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     private var mAllNodes:List<LNode>? = null
     private val mNodeHashes:Map<String,Int>
     private val mModifiedNodes:List<LNode>
+    private var mNodesToDelete:List<String>? = null
 
     /**
      * Builder pattern for constructing an [PrimaryStringDocument] instance.
@@ -64,6 +65,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         mNodeHashes = loadNodeHashes()
         mAllNodes = loadStringXmlNodes()
         mModifiedNodes = listModifiedNodes()
+        mNodesToDelete = listDeletedNodes()
         mInputStream = null
     }
 
@@ -134,6 +136,19 @@ class PrimaryStringDocument private constructor(builder: Builder) {
             }
         }
         return list
+    }
+
+    private fun listDeletedNodes():List<String>? {
+        val list = mutableListOf<String>()
+        mAllNodes?.let { allNodes ->
+            for(item in mNodeHashes){
+                if(allNodes.find { it.name == item.key } == null){
+                    list.add(item.key)
+                }
+            }
+            return list
+        }
+        return null
     }
 
     /**
@@ -237,14 +252,23 @@ class PrimaryStringDocument private constructor(builder: Builder) {
             rootElement = doc.createElement("resources")
             doc.appendChild(rootElement)
         }
-
-        // Remove empty text nodes (to clean existing file)
         removeWhitespaceNodes(rootElement)
-
-        val existingNodes = mutableSetOf<String>()
         val nodeList = rootElement.getElementsByTagName("string")
+        val nodesToRemove = mutableListOf<Node>()
+
         for (i in 0 until nodeList.length) {
             val element = nodeList.item(i) as Element
+            if (mNodesToDelete?.contains(element.getAttribute("name")) == true) {
+                nodesToRemove.add(element)
+            }
+        }
+        for (node in nodesToRemove) {
+            rootElement.removeChild(node)
+        }
+
+        val existingNodes = mutableSetOf<String>()
+        for (i in 0 until rootElement.getElementsByTagName("string").length) {
+            val element = rootElement.getElementsByTagName("string").item(i) as Element
             existingNodes.add(element.getAttribute("name"))
         }
 
@@ -257,15 +281,13 @@ class PrimaryStringDocument private constructor(builder: Builder) {
             }
         }
 
-        // Transformer settings to completely remove extra spaces & blank lines
         val transformer = TransformerFactory.newInstance().newTransformer()
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes") // No indentation
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2") // Set indent level
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes")
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2")
         val source = DOMSource(doc)
         val result = StreamResult(outputFile)
         transformer.transform(source, result)
     }
-
     // Function to remove all blank text nodes (whitespace-only)
     private fun removeWhitespaceNodes(node: Node) {
         val children = node.childNodes
