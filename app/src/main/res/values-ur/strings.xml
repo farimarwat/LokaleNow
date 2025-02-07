@@ -6,10 +6,5 @@
   <string name="next">آگے کیا؟</string>
   <string name="previous">پچھلا =</string>
   <string name="login">لاگ ان اور لطف اٹھائیں</string>
-  <string name="details">اس کا ترجمہ نہیں کیا جائے گا</string>
-  <string name="test">یہ میرا امتحان نہیں ہے</string>
-  <string name="newchange">ہیلو یہ نئی تبدیلی ہے</string>
-  <string name="mychange">یہ میں ہوں</string>
-  <string name="mylastchange">کیا یہ کام کر رہا ہے؟</string>
-  <string name="thisapp">اصل میں! مجھے یہ پسند نہیں ہے</string>
+  <string name="about">میرے بارے میں سب</string>
 </resources>

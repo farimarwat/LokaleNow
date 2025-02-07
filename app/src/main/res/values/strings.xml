@@ -5,10 +5,5 @@
     <string name="next">What Next?</string>
     <string name="previous">Previous =</string>
     <string name="login">Login &amp; Enjoy</string>
-    <string name="details">This will not be translated</string>
-    <string name="test">This is my test Nothing to do</string>
-    <string name="newchange">Hello this is new change</string>
-    <string name="mychange">This is me</string>
-    <string name="mylastchange">Is this working?</string>
-    <string name="thisapp">Actually! I do not like this</string>
+    <string name="about">All about me</string>
 </resources>

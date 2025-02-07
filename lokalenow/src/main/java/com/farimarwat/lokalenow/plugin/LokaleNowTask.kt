@@ -23,25 +23,8 @@ abstract class LokaleNowTask: DefaultTask() {
         // Clean up old languages (removes unused ones)
         cleanUpOldLanguages(path)
 
-        // Check if the document is modified or if we need to update the languages
-        if (ldoc.isModified()) {
-            ldoc.saveHashes()
-            val listString = if(ldoc.getModifiedNodes() != null) ldoc.getModifiedNodes() else ldoc.getAllNodes()
-            if(listString == null) return
-            val translator = Translator.Builder()
-                .addNodes(listString)
-                .build()
-
-            // Process each language only if it's a new language or has not been processed yet
-            languages.forEach { lang ->
-                println("Translating for: $lang")
-                val translated = translator.translate(lang)
-                ldoc.saveLocalized(lang, translated)
-            }
-        }
         val existingFilesCount = countExistingLangDirs(path)
         if(existingFilesCount != languages.count()){
-            ldoc.saveHashes()
             val listString = ldoc.getAllNodes()
             if(listString == null) return
             val translator = Translator.Builder()
@@ -60,6 +43,23 @@ abstract class LokaleNowTask: DefaultTask() {
                 }
             }
         }
+
+        // Check if the document is modified or if we need to update the languages
+        if (ldoc.isModified()) {
+            val listString = if(ldoc.getModifiedNodes() != null) ldoc.getModifiedNodes() else ldoc.getAllNodes()
+            if(listString == null) return
+            val translator = Translator.Builder()
+                .addNodes(listString)
+                .build()
+
+            // Process each language only if it's a new language or has not been processed yet
+            languages.forEach { lang ->
+                println("Translating for: $lang")
+                val translated = translator.translate(lang)
+                ldoc.saveLocalized(lang, translated)
+            }
+        }
+        ldoc.saveHashes()
     }
 
 
