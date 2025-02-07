@@ -6,5 +6,24 @@
   <string name="next">ماذا بعد؟</string>
   <string name="previous">السابق =</string>
   <string name="login">تسجيل الدخول والتمتع</string>
-  <string name="about">كل شيء عني</string>
+  <string name="welcome_message">مرحبًا بك في اللغة الآن!</string>
+  <string name="error_message">حدث خطأ غير متوقع. من فضلك حاول مرة أخرى.</string>
+  <string name="success_message">تم حفظ التغييرات الخاصة بك بنجاح.</string>
+  <string name="loading">تحميل...</string>
+  <string name="confirm_exit">هل أنت متأكد أنك تريد الخروج؟</string>
+  <string name="yes">نعم</string>
+  <string name="no">لا</string>
+  <string name="retry">إعادة المحاولة</string>
+  <string name="submit">يُقدِّم</string>
+  <string name="cancel">يلغي</string>
+  <string name="language_selection">حدد لغتك المفضلة</string>
+  <string name="date_format">yyyy-mm-dd</string>
+  <string name="time_format">HH: MM: SS</string>
+  <string name="contact_us">اتصل بنا</string>
+  <string name="about_us">معلومات عنا</string>
+  <string name="quote_example">قال ،  &amp;quot;التوطين مهم! &amp;quot;</string>
+  <string name="apostrophe_example">إنه يوم عظيم للاختبار!</string>
+  <string name="comma_example">الاختبار ، تصحيح الأخطاء ، وإصلاح القضايا.</string>
+  <string name="ampersand_example">هذا وهم أشياء مختلفة.</string>
+  <string name="mix_example"> &amp;quot;مرحبًا ، إنه اختبار! &amp;quot; ، قالت.</string>
 </resources>
