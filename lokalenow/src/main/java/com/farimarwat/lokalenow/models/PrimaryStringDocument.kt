@@ -3,6 +3,7 @@ package com.farimarwat.lokalenow.models
 import com.farimarwat.lokalenow.utils.calculateFileHash
 import org.w3c.dom.Document
 import org.w3c.dom.Element
+import org.w3c.dom.Node
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
@@ -61,10 +62,8 @@ class PrimaryStringDocument private constructor(builder: Builder) {
             null
         }
         mNodeHashes = loadNodeHashes()
-        mAllNodes = loadAllStringNodes()
+        mAllNodes = loadStringXmlNodes()
         mModifiedNodes = listModifiedNodes()
-        println("Node Hashes: ${mNodeHashes}")
-        println("Modified Nodes: ${mModifiedNodes}")
         mInputStream = null
     }
 
@@ -74,7 +73,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
      *
      * @return A list of [LNode] objects representing the XML elements.
      */
-    private fun loadAllStringNodes(): List<LNode> {
+    private fun loadStringXmlNodes(): List<LNode> {
         val list = mutableListOf<LNode>()
         try {
             mDocument?.let { doc ->
@@ -102,6 +101,9 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     fun getAllNodes():List<LNode>?{
         return mAllNodes
     }
+    fun getModifiedNodes():List<LNode>?{
+        return if(mModifiedNodes.isNotEmpty()) mModifiedNodes else null
+    }
 
     private fun loadNodeHashes(): Map<String, Int> {
         val nodeHashFile = getHashFile(NODES_HASH_FILE_NAME)
@@ -121,14 +123,11 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         return map
     }
 
-
     private fun listModifiedNodes():List<LNode>{
         val list = mutableListOf<LNode>()
-        println("AllNodes: $mAllNodes")
         mAllNodes?.let{ allNodes ->
             for(item in allNodes){
                 val hash = mNodeHashes[item.name]
-                println("MyHash: ${item.value.hashCode()} = $hash")
                 if(hash != item.value.hashCode()){
                     list.add(item)
                 }
@@ -146,13 +145,9 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     fun isModified(): Boolean {
         val hashFile = getHashFile(STRINGS_XML_HASH_FILE_NAME)
         val currentHash = mStringsFile.calculateFileHash()
-
-        // If the hash file does not exist (e.g., it was deleted during clean project)
         if (!hashFile.exists()) {
-            return true // Consider the file modified if the hash file is missing
+            return true
         }
-
-        // If the hash file exists, compare its stored hash with the current hash
         val storedHash = hashFile.readText().trim() // Ensure any extra whitespace is removed
         return storedHash != currentHash
     }
@@ -161,7 +156,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     /**
      * Saves the current hash of the strings.xml file to detect modifications later.
      */
-    fun saveCurrentFileHash() {
+    fun saveHashes() {
         val hashFile = getHashFile(STRINGS_XML_HASH_FILE_NAME)
         val currentHash = mStringsFile.calculateFileHash()
         hashFile.writeText(currentHash)
@@ -170,7 +165,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
 
     private fun saveNodeHashes() {
         val nodeHashFile = getHashFile(NODES_HASH_FILE_NAME)
-        val nodes = loadAllStringNodes()
+        val nodes = loadStringXmlNodes()
         val content = nodes.joinToString("\n") { "${it.name}:${it.value.hashCode()}" }
         try {
             nodeHashFile.writeText(content)
@@ -230,25 +225,58 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     private fun saveXmlFile(nodes: List<LNode>, outputFile: File) {
         val docFactory = DocumentBuilderFactory.newInstance()
         val docBuilder = docFactory.newDocumentBuilder()
+        val doc: Document
+        val rootElement: Element
 
-        val doc = docBuilder.newDocument()
-        val rootElement = doc.createElement("resources")
-        doc.appendChild(rootElement)
-
-        for (node in nodes) {
-            val element = doc.createElement("string")
-            element.setAttribute("name", node.name)
-            element.textContent = node.value
-            rootElement.appendChild(element)
+        if (outputFile.exists() && outputFile.length() > 0) {
+            doc = docBuilder.parse(outputFile)
+            rootElement = doc.documentElement
+            doc.normalizeDocument()
+        } else {
+            doc = docBuilder.newDocument()
+            rootElement = doc.createElement("resources")
+            doc.appendChild(rootElement)
         }
 
-        val transformer = TransformerFactory.newInstance().newTransformer()
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes")
+        // Remove empty text nodes (to clean existing file)
+        removeWhitespaceNodes(rootElement)
 
+        val existingNodes = mutableSetOf<String>()
+        val nodeList = rootElement.getElementsByTagName("string")
+        for (i in 0 until nodeList.length) {
+            val element = nodeList.item(i) as Element
+            existingNodes.add(element.getAttribute("name"))
+        }
+
+        for (node in nodes) {
+            if (!existingNodes.contains(node.name)) {
+                val element = doc.createElement("string")
+                element.setAttribute("name", node.name)
+                element.textContent = node.value
+                rootElement.appendChild(element)
+            }
+        }
+
+        // Transformer settings to completely remove extra spaces & blank lines
+        val transformer = TransformerFactory.newInstance().newTransformer()
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes") // No indentation
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2") // Set indent level
         val source = DOMSource(doc)
         val result = StreamResult(outputFile)
-
         transformer.transform(source, result)
+    }
+
+    // Function to remove all blank text nodes (whitespace-only)
+    private fun removeWhitespaceNodes(node: Node) {
+        val children = node.childNodes
+        for (i in children.length - 1 downTo 0) { // Iterate in reverse to avoid skipping nodes
+            val child = children.item(i)
+            if (child.nodeType == Node.TEXT_NODE && child.textContent.trim().isEmpty()) {
+                node.removeChild(child)
+            } else if (child.nodeType == Node.ELEMENT_NODE) {
+                removeWhitespaceNodes(child) // Recursively clean child elements
+            }
+        }
     }
 
     companion object {

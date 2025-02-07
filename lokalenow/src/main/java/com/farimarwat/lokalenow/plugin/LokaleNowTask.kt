@@ -25,8 +25,8 @@ abstract class LokaleNowTask: DefaultTask() {
 
         // Check if the document is modified or if we need to update the languages
         if (ldoc.isModified()) {
-            ldoc.saveCurrentFileHash()
-            val listString = ldoc.getAllNodes()
+            ldoc.saveHashes()
+            val listString = if(ldoc.getModifiedNodes() != null) ldoc.getModifiedNodes() else ldoc.getAllNodes()
             if(listString == null) return
             val translator = Translator.Builder()
                 .addNodes(listString)
@@ -41,7 +41,7 @@ abstract class LokaleNowTask: DefaultTask() {
         }
         val existingFilesCount = countExistingLangDirs(path)
         if(existingFilesCount != languages.count()){
-            ldoc.saveCurrentFileHash()
+            ldoc.saveHashes()
             val listString = ldoc.getAllNodes()
             if(listString == null) return
             val translator = Translator.Builder()
