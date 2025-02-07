@@ -6,7 +6,6 @@ import org.w3c.dom.Element
 import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
-import java.security.MessageDigest
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.transform.OutputKeys
 import javax.xml.transform.TransformerFactory
@@ -29,6 +28,9 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     private val mStringsFile: File
     private val mDocument: Document?
     private val mInputStream: InputStream?
+    private var mAllNodes:List<LNode>? = null
+    private val mNodeHashes:Map<String,Int>
+    private val mModifiedNodes:List<LNode>
 
     /**
      * Builder pattern for constructing an [PrimaryStringDocument] instance.
@@ -47,6 +49,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     init {
         mProjDir = builder.projDir
         mStringsFile = File("${mProjDir}$VALUES_PATH$STRINGS_XML_FILE_NAME")
+
         mDocument = try {
             val factory = DocumentBuilderFactory.newInstance()
             val documentBuilder = factory.newDocumentBuilder()
@@ -57,6 +60,11 @@ class PrimaryStringDocument private constructor(builder: Builder) {
             println("Error creating LDocument: $ex")
             null
         }
+        mNodeHashes = loadNodeHashes()
+        mAllNodes = loadAllStringNodes()
+        mModifiedNodes = listModifiedNodes()
+        println("Node Hashes: ${mNodeHashes}")
+        println("Modified Nodes: ${mModifiedNodes}")
         mInputStream = null
     }
 
@@ -66,7 +74,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
      *
      * @return A list of [LNode] objects representing the XML elements.
      */
-    fun listElements(): List<LNode> {
+    private fun loadAllStringNodes(): List<LNode> {
         val list = mutableListOf<LNode>()
         try {
             mDocument?.let { doc ->
@@ -88,6 +96,43 @@ class PrimaryStringDocument private constructor(builder: Builder) {
             }
         } catch (ex: Exception) {
             println("Error listing elements: $ex")
+        }
+        return list
+    }
+    fun getAllNodes():List<LNode>?{
+        return mAllNodes
+    }
+
+    private fun loadNodeHashes(): Map<String, Int> {
+        val nodeHashFile = getHashFile(NODES_HASH_FILE_NAME)
+        val map = mutableMapOf<String, Int>()
+        if (nodeHashFile.exists()) {
+            nodeHashFile.forEachLine { line ->
+                val parts = line.split(":")
+                if (parts.size == 2) {
+                    val key = parts[0]
+                    val value = parts[1].toIntOrNull()
+                    if (value != null) {
+                        map[key] = value
+                    }
+                }
+            }
+        }
+        return map
+    }
+
+
+    private fun listModifiedNodes():List<LNode>{
+        val list = mutableListOf<LNode>()
+        println("AllNodes: $mAllNodes")
+        mAllNodes?.let{ allNodes ->
+            for(item in allNodes){
+                val hash = mNodeHashes[item.name]
+                println("MyHash: ${item.value.hashCode()} = $hash")
+                if(hash != item.value.hashCode()){
+                    list.add(item)
+                }
+            }
         }
         return list
     }
@@ -125,7 +170,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
 
     private fun saveNodeHashes() {
         val nodeHashFile = getHashFile(NODES_HASH_FILE_NAME)
-        val nodes = listElements()
+        val nodes = loadAllStringNodes()
         val content = nodes.joinToString("\n") { "${it.name}:${it.value.hashCode()}" }
         try {
             nodeHashFile.writeText(content)
@@ -158,10 +203,6 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         hashDir.mkdirs()
         return hashDir
     }
-
-
-
-
 
     /**
      * Saves the localized version of the XML file with translated string values.

@@ -7,6 +7,5 @@
     <string name="previous">السابق =</string>
     <string name="login">تسجيل الدخول والتمتع</string>
     <string name="details">لن يتم ترجمة هذا</string>
-    <string name="test">هذا هو اختباري</string>
-    <string name="mychange">هل يمكنك إصلاحه؟</string>
+    <string name="test">هذا هو اختباري ويمكنني تغييره</string>
 </resources>
