@@ -8,9 +8,9 @@ plugins {
   ...
   ...
   // for kotlin
-  id("io.github.farimarwat.lokalenow") version "1.4"
+  id("io.github.farimarwat.lokalenow") version "1.5"
   //for groovy
-  id "io.github.farimarwat.lokalenow" version "1.4"
+  id "io.github.farimarwat.lokalenow" version "1.5"
 }
 ```
 
