@@ -12,8 +12,12 @@ abstract class LokaleNowTask: DefaultTask() {
     @get:Input
     var languages = listOf<String>()
 
+    @get:Input
+    var activate = true
+
     @TaskAction
     fun doTranslate() {
+        if(!activate) return
         val path = project.layout.projectDirectory.toString()
         val filePath = File(path)
         val ldoc = PrimaryStringDocument

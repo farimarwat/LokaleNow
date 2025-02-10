@@ -8,6 +8,7 @@ class LokaleNow: Plugin<Project> {
         val extension = project.extensions.create("lokalenow",LokaleNowExtension::class.java)
         val task = project.tasks.register("translatenow",LokaleNowTask::class.java){
             languages = extension.languages
+            activate = extension.activate
         }
         project.tasks.named("preBuild").get().dependsOn(task)
     }
