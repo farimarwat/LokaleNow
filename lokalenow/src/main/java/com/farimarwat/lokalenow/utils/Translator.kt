@@ -23,11 +23,15 @@ class Translator private constructor(builder: Builder) {
     init {
         nodes = builder.nodes
     }
-
     fun translate(lang: String): List<LNode> {
         val translatedNodes = mutableListOf<LNode>()
-        for (node in nodes) {
+        val totalNodes = nodes.size
+        println("\n")
+        nodes.forEachIndexed { index, node ->
+            val progress = ((index + 1)*100)/totalNodes
+            print("\rTranslating for: $lang ($progress%)")
             if (node.translatable) {
+                System.out.flush()
                 val translatedValue = NetworkHelper.getTranslation(lang, node.value)
                 translatedNodes.add(LNode(node.name, translatedValue ?: node.value))
             }

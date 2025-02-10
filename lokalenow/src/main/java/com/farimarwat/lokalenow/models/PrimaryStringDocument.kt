@@ -82,16 +82,15 @@ class PrimaryStringDocument private constructor(builder: Builder) {
                 val nodes = doc.documentElement.childNodes
                 list.addAll((0 until nodes.length)
                     .mapNotNull { nodes.item(it) as? Element }
-                    .map {
-                        val name = it.getAttribute("name")
-                        val value = it.textContent
-                        val translatable = if (it.hasAttribute("translatable")) {
-                            val translatableAtr = it.getAttributeNode("translatable")
-                            translatableAtr.value.toBoolean()
+                    .mapNotNull { element -> // Use mapNotNull to exclude non-translatable nodes
+                        val name = element.getAttribute("name")
+                        val value = element.textContent
+                        val translatable = if (element.hasAttribute("translatable")) {
+                            element.getAttribute("translatable").toBoolean()
                         } else {
-                            true
+                            true // Default to true if the attribute is missing
                         }
-                        LNode(name, value, translatable)
+                        if (translatable) LNode(name, value, translatable) else null // Filter here
                     }
                 )
             }
@@ -100,6 +99,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         }
         return list
     }
+
     fun getAllNodes():List<LNode>?{
         return mAllNodes
     }
