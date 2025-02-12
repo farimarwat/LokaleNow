@@ -1,7 +1,8 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("io.github.farimarwat.lokalenow") version "1.6"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.10"
+    id("io.github.farimarwat.lokalenow") version "1.8"
 }
 
 android {
@@ -29,12 +30,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_19
-        targetCompatibility = JavaVersion.VERSION_19
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
 
     kotlinOptions {
-        jvmTarget = "19"
+        jvmTarget = "21"
     }
 
     buildFeatures {
@@ -47,7 +48,7 @@ android {
     
 }
 lokalenow{
-    languages = listOf("ar","ur","in","de")
+    languages = listOf("ar","ur","hi")
     activate = true
 }
 

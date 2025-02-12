@@ -5,6 +5,8 @@
     <string name="next">What Next?</string>
     <string name="previous">Previous =</string>
     <string name="login">Login &amp; Enjoy</string>
+    <string name="formatString">Your string %s goes here</string>
+    <string name="tabNewLine">The newline start \n from here</string>
 
     <!-- Additional test entries with special characters -->
     <string name="welcome_message">Welcome to Locale Now!</string>

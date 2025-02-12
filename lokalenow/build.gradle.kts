@@ -1,11 +1,11 @@
 plugins {
     id("maven-publish")
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "1.1.0"
+    id("com.gradle.plugin-publish") version "1.3.1"
 }
 
 extra["PUBLISH_GROUP_ID"] = "io.github.farimarwat"
-extra["PUBLISH_VERSION"] = "1.6"
+extra["PUBLISH_VERSION"] = "1.8"
 extra["PUBLISH_ARTIFACT_ID"] = "lokalenow"
 extra["PUBLISH_DESCRIPTION"] = "An android gradle plugin for localization"
 extra["PUBLISH_URL"] = "https://github.com/farimarwat/LokaleNow"
@@ -47,8 +47,7 @@ gradlePlugin {
     }
 }
 dependencies {
-    implementation("com.android.tools.build:gradle:7.4.2")
-    //implementation("org.javassist:javassist:3.29.2-GA")
+    implementation("com.android.tools.build:gradle:8.0.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation ("com.google.code.gson:gson:2.10.1")
 }
