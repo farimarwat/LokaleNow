@@ -1,34 +1,12 @@
 <resources>
     <string name="app_name">Locale Now</string>
     <string name="title">Testing "App"</string>
-    <string name="description">Introducing Localenow, a powerful and user-friendly plugin designed to streamline your localization process effortlessly. With Localenow, easily manage and implement multilingual content within your applications, websites, or software projects. This plugin offers a seamless integration experience, allowing you to test and optimize your localized content with efficiency. Say goodbye to language barriers &amp; hello to a smoother, more accessible user experience with Localenow.</string>
+    <string name="description">Introducing Localenow, a powerful and user-friendly plugin designed to streamlin</string>
     <string name="next">What Next?</string>
     <string name="previous">Previous =</string>
     <string name="login">Login &amp; Enjoy</string>
     <string name="formatString">Your string %s goes here</string>
     <string name="tabNewLine">The newline start \n from here</string>
 
-    <!-- Additional test entries with special characters -->
-    <string name="welcome_message">Welcome to Locale Now!</string>
-    <string name="error_message">An unexpected error occurred. Please try again.</string>
-    <string name="success_message">Your changes have been saved successfully.</string>
-    <string name="loading">Loading...</string>
-    <string name="confirm_exit">Are you sure you want to exit?</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
-    <string name="retry">Retry</string>
-    <string name="submit">Submit</string>
-    <string name="cancel">Cancel</string>
-    <string name="language_selection">Select your preferred language</string>
-    <string name="date_format">yyyy-MM-dd</string>
-    <string name="time_format">HH:mm:ss</string>
-    <string name="contact_us">Contact Us</string>
-    <string name="about_us">About Us</string>
 
-    <!-- Special characters test cases -->
-    <string name="quote_example">He said, &quot;Localization is important!&quot;</string>
-    <string name="apostrophe_example">It\'s a great day for testing!</string>
-    <string name="comma_example">Testing, debugging, &amp; fixing issues.</string>
-    <string name="ampersand_example">This &amp; that are different things.</string>
-    <string name="mix_example">"Hello, it's a test!", she said.</string>
 </resources>

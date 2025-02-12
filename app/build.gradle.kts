@@ -48,7 +48,7 @@ android {
     
 }
 lokalenow{
-    languages = listOf("ar","ur","hi")
+    languages = listOf("ar")
     activate = true
 }
 

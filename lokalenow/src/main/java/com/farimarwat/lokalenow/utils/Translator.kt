@@ -47,7 +47,8 @@ object NetworkHelper {
     private val client = OkHttpClient()
 
     fun getTranslation(lang: String, text: String): String? {
-        val urlEncodedString = URLEncoder.encode(text, StandardCharsets.UTF_8)
+        val preparedText = PlaceholderManager.applyPlaceholders(text)
+        val urlEncodedString = URLEncoder.encode(preparedText, StandardCharsets.UTF_8)
         val urlString =
             "https://translate.googleapis.com/translate_a/t?client=gtx&dt=t&sl=en&tl=$lang&q=$urlEncodedString"
         val request = Request.Builder()
@@ -57,9 +58,13 @@ object NetworkHelper {
             val response = client.newCall(request).execute()
             val jsonResponse = response.body?.string()
 
-            // Parse JSON using Gson JsonParser
             val jsonArray = JsonParser.parseString(jsonResponse).asJsonArray
-            return sanitizeXmlString(jsonArray.firstOrNull()?.asString)
+            val sanitizedText =  sanitizeXmlString(jsonArray.firstOrNull()?.asString)
+            return if (sanitizedText != null) {
+                PlaceholderManager.restorePlaceholders(sanitizedText)
+            }else {
+                null
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
