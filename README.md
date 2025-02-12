@@ -8,9 +8,9 @@ plugins {
   ...
   ...
   // for kotlin
-  id("io.github.farimarwat.lokalenow") version "1.5"
+  id("io.github.farimarwat.lokalenow") version "1.9"
   //for groovy
-  id "io.github.farimarwat.lokalenow" version "1.5"
+  id "io.github.farimarwat.lokalenow" version "1.9"
 }
 ```
 
@@ -35,11 +35,13 @@ android{
 }
 // for kotlin
 lokalenow{
-     languages = listOf("fr","ru","ar")
+     languages = listOf("fr","ru","ar") //target languages codes
+     activate = true /// Enable automatic translation
 }
 // for groovy
 lokalenow{
-     languages = ["fr","ru","ar"]
+     languages = ["fr","ru","ar"] //target languages codes
+     acivate = true // Enable automatic translation
 }
 ```
 ## Done.
@@ -64,6 +66,11 @@ There is need to handle symbols while translation. If you want to improve the co
 
 
 ## Version History
+**1.9**
+1. Fixed %s format, newline and tab tag issue
+2. Bugs, after applying the plugin, red lines under each android{} configuration, fixed
+3. Other minor changes
+
 **1.4**
 1. Fixed encoding issues
 2. Old file delete issue
