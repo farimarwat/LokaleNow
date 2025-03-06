@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.10"
-    id("io.github.farimarwat.lokalenow") version "1.8"
+    id("io.github.farimarwat.lokalenow") version "1.10"
 }
 
 android {
@@ -45,15 +45,10 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.15"
     }
-    
-}
-lokalenow{
-    languages = listOf("ar")
-    activate = true
-}
 
+
+}
 dependencies {
-
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.activity:activity-compose:1.10.0")
@@ -70,3 +65,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
+  lokalenow{
+      languages = listOf("hi","ar")
+      activate = true
+  }
+

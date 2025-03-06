@@ -49,7 +49,7 @@ fun Main(){
             fontSize = 24.sp
         )
         Text(
-            text = stringResource(id = R.string.tabNewLine)+ stringResource(id = R.string.formatString,"formatted"),
+            text = stringResource(id = R.string.description),
             textAlign = TextAlign.Center,
             fontSize = 18.sp
         )

@@ -2,10 +2,28 @@
 <resources>
   <string name="app_name">لغة الآن</string>
   <string name="title">اختبار  &amp;quot;التطبيق &amp;quot;</string>
-  <string name="description">تقديم LocalEnow ، وهو مكون قوي وسهل الاستخدام مصمم إلى Streamlin</string>
+  <string name="description">تقديم LocalEnow ، وهو مكون قوي وسهل الاستخدام مصمم لتبسيط عملية التوطين الخاصة بك دون عناء. مع LocalEnow ، إدارة المحتوى متعدد اللغات بسهولة داخل التطبيقات أو مواقع الويب أو مشاريع البرامج الخاصة بك. يوفر هذا البرنامج المساعد تجربة تكامل سلسة ، مما يتيح لك اختبار المحتوى المترجمة وتحسينه بكفاءة. قل وداعًا لحواجز اللغة ومرحبا بتجربة مستخدم أكثر سلاسة وأكثر سهلة الوصول مع LocalEnow.</string>
   <string name="next">ماذا بعد؟</string>
   <string name="previous">السابق =</string>
   <string name="login">تسجيل الدخول والتمتع</string>
-  <string name="formatString">سلسلة %s تذهب هنا</string>
-  <string name="tabNewLine">يبدأ الخط الجديد \n من هنا</string>
+  <string name="welcome_message">مرحبًا بك في اللغة الآن!</string>
+  <string name="error_message">حدث خطأ غير متوقع. من فضلك حاول مرة أخرى.</string>
+  <string name="success_message">تم حفظ التغييرات الخاصة بك بنجاح.</string>
+  <string name="loading">تحميل...</string>
+  <string name="confirm_exit">هل أنت متأكد أنك تريد الخروج؟</string>
+  <string name="yes">نعم</string>
+  <string name="no">لا</string>
+  <string name="retry">إعادة المحاولة</string>
+  <string name="submit">يُقدِّم</string>
+  <string name="cancel">يلغي</string>
+  <string name="language_selection">حدد لغتك المفضلة</string>
+  <string name="date_format">yyyy-mm-dd</string>
+  <string name="time_format">HH: MM: SS</string>
+  <string name="contact_us">اتصل بنا</string>
+  <string name="about_us">معلومات عنا</string>
+  <string name="quote_example">قال ،  &amp;quot;التوطين مهم! &amp;quot;</string>
+  <string name="apostrophe_example">إنه يوم عظيم للاختبار!</string>
+  <string name="comma_example">الاختبار ، تصحيح الأخطاء ، وإصلاح القضايا.</string>
+  <string name="ampersand_example">هذا وهم أشياء مختلفة.</string>
+  <string name="mix_example"> &amp;quot;مرحبًا ، إنه اختبار! &amp;quot; ، قالت.</string>
 </resources>

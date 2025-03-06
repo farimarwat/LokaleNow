@@ -21,7 +21,6 @@ object PlaceholderManager {
             val googleMessedUpValue = value.lowercase().replace(" ", "")
             modifiedText = modifiedText.replace(googleMessedUpValue, key)
         }
-        println("✅ Restored text: $modifiedText")
         return modifiedText
     }
 }

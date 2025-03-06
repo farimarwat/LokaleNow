@@ -6,6 +6,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.util.Locale
 
 class Translator private constructor(builder: Builder) {
     private val nodes: List<LNode>
@@ -29,7 +30,7 @@ class Translator private constructor(builder: Builder) {
         println("\n")
         nodes.forEachIndexed { index, node ->
             val progress = ((index + 1)*100)/totalNodes
-            print("\rTranslating for: $lang ($progress%)")
+            print("\rTranslating for: ${lang.uppercase()} ($progress%)")
             if (node.translatable) {
                 System.out.flush()
                 val translatedValue = NetworkHelper.getTranslation(lang, node.value)
@@ -38,8 +39,6 @@ class Translator private constructor(builder: Builder) {
         }
         return translatedNodes
     }
-
-
 }
 
 

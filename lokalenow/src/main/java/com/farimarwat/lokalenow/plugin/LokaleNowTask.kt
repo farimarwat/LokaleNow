@@ -6,6 +6,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import java.io.IOException
 
 
 abstract class LokaleNowTask: DefaultTask() {
@@ -18,6 +19,7 @@ abstract class LokaleNowTask: DefaultTask() {
     @TaskAction
     fun doTranslate() {
         if(!activate) return
+        println("Starting translating languages")
         val path = project.layout.projectDirectory.toString()
         val filePath = File(path)
         val ldoc = PrimaryStringDocument
@@ -66,25 +68,47 @@ abstract class LokaleNowTask: DefaultTask() {
     /**
      * Cleans up old language folders that are no longer required.
      */
+    /**
+     * Cleans up old language folders by removing only the strings.xml files that are no longer required.
+     */
     private fun cleanUpOldLanguages(projectPath: String) {
         // Define the base directory where language folders are stored
         val resDir = File(projectPath, "src${File.separator}main${File.separator}res")
 
+        // Check if the directory exists and is accessible
+        if (!resDir.exists() || !resDir.isDirectory) {
+            println("Error: Resource directory does not exist or is not accessible: ${resDir.absolutePath}")
+            return
+        }
+
         // Get the current list of language folders (e.g., values-ar, values-fr)
         val existingLangDirs = resDir.listFiles { file ->
             file.isDirectory && file.name.startsWith("values-")
-        }?.map { it.name.substringAfter("values-") } ?: emptyList()
+        }?.mapNotNull { file ->
+            val langCode = file.name.substringAfter("values-")
+            val stringsFile = File(file, "strings.xml")
+            if (stringsFile.exists()) {
+                langCode
+            } else {
+                null
+            }
+        } ?: emptyList()
 
-        // Find out which languages need to be removed (those that are not in the new list)
         val languagesToRemove = existingLangDirs.filterNot { it in languages }
-        print("Languages To Remove: "+languagesToRemove+"\n")
-
-        // Remove unwanted language folders
+        println("Languages To Remove: $languagesToRemove")
         languagesToRemove.forEach { lang ->
             val langDir = File(resDir, "values-$lang")
             if (langDir.exists()) {
-                println("Removing directory for language: $lang")
-                deleteDirectory(langDir)
+                val stringsFile = File(langDir, "strings.xml")
+                if (stringsFile.exists()) {
+                    try {
+                        stringsFile.delete()
+                    } catch (e: SecurityException) {
+                        println("SecurityException: Unable to delete strings.xml for language: $lang. ${e.message}")
+                    } catch (e: IOException) {
+                        println("IOException: Unable to delete strings.xml for language: $lang. ${e.message}")
+                    }
+                }
             }
         }
     }
@@ -96,17 +120,5 @@ abstract class LokaleNowTask: DefaultTask() {
         }?.map { it.name.substringAfter("values-") } ?: emptyList()
 
         return existingLangDirs.size
-    }
-
-    /**
-     * Recursively deletes a directory and its contents.
-     */
-    private fun deleteDirectory(directory: File) {
-        if (directory.isDirectory) {
-            directory.listFiles()?.forEach {
-                deleteDirectory(it) // Recursively delete files
-            }
-        }
-        directory.delete()
     }
 }
