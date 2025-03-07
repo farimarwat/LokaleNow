@@ -8,9 +8,9 @@ plugins {
   ...
   ...
   // for kotlin
-  id("io.github.farimarwat.lokalenow") version "1.9"
+  id("io.github.farimarwat.lokalenow") version "1.10"
   //for groovy
-  id "io.github.farimarwat.lokalenow" version "1.9"
+  id "io.github.farimarwat.lokalenow" version "1.10"
 }
 ```
 
@@ -67,6 +67,10 @@ There is need to handle symbols while translation. If you want to improve the co
 
 
 ## Version History
+**1.10**
+1. Moved hash dir to root project to maintain hashes even after clean or rebuild project
+2. Fixed delete whole language values dir.
+
 **1.9**
 1. Fixed %s format, newline and tab tag issue
 2. Bugs, after applying the plugin, red lines under each android{} configuration, fixed
