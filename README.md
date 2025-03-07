@@ -70,6 +70,7 @@ There is need to handle symbols while translation. If you want to improve the co
 **1.10**
 1. Moved hash dir to root project to maintain hashes even after clean or rebuild project
 2. Fixed delete whole language values dir.
+3. Fixed <a href='https://github.com/farimarwat/LokaleNow/issues/12'>#12</a>
 
 **1.9**
 1. Fixed %s format, newline and tab tag issue
