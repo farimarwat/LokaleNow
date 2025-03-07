@@ -48,6 +48,10 @@ android {
 
 
 }
+lokalenow{
+    languages = listOf("ar","hi","cn")
+    activate = true
+}
 dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
@@ -65,8 +69,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
-  lokalenow{
-      languages = listOf("hi","ar")
-      activate = true
-  }
+
 

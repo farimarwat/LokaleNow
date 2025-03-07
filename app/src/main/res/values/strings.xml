@@ -14,7 +14,7 @@
     <string name="confirm_exit">Are you sure you want to exit?</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
-    <string name="retry">Retry</string>
+    <string name="retry">Retry and Go</string>
     <string name="submit">Submit</string>
     <string name="cancel">Cancel</string>
     <string name="language_selection">Select your preferred language</string>

@@ -206,7 +206,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
      * @return The hash directory.
      */
     private fun getHashDirectory(): File {
-        val buildDir = File(mProjDir, "build")
+        val buildDir = File(mProjDir, "lokalenow")
         buildDir.mkdirs()
 
         val hashDir = File(buildDir, "hashes")

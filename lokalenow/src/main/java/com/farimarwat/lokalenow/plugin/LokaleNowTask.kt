@@ -11,7 +11,7 @@ import java.io.IOException
 
 abstract class LokaleNowTask: DefaultTask() {
     @get:Input
-    var languages = listOf<String>()
+    var languages = setOf<String>()
 
     @get:Input
     var activate = true
@@ -72,16 +72,11 @@ abstract class LokaleNowTask: DefaultTask() {
      * Cleans up old language folders by removing only the strings.xml files that are no longer required.
      */
     private fun cleanUpOldLanguages(projectPath: String) {
-        // Define the base directory where language folders are stored
         val resDir = File(projectPath, "src${File.separator}main${File.separator}res")
-
-        // Check if the directory exists and is accessible
         if (!resDir.exists() || !resDir.isDirectory) {
             println("Error: Resource directory does not exist or is not accessible: ${resDir.absolutePath}")
             return
         }
-
-        // Get the current list of language folders (e.g., values-ar, values-fr)
         val existingLangDirs = resDir.listFiles { file ->
             file.isDirectory && file.name.startsWith("values-")
         }?.mapNotNull { file ->
@@ -112,12 +107,26 @@ abstract class LokaleNowTask: DefaultTask() {
             }
         }
     }
+    /**
+     * Counts the number of existing language directories that contain a strings.xml file.
+     */
     fun countExistingLangDirs(projectPath: String): Int {
         val resDir = File(projectPath, "src${File.separator}main${File.separator}res")
-
+        if (!resDir.exists() || !resDir.isDirectory) {
+            println("Error: Resource directory does not exist or is not accessible: ${resDir.absolutePath}")
+            return 0
+        }
         val existingLangDirs = resDir.listFiles { file ->
             file.isDirectory && file.name.startsWith("values-")
-        }?.map { it.name.substringAfter("values-") } ?: emptyList()
+        }?.mapNotNull { file ->
+            val langCode = file.name.substringAfter("values-")
+            val stringsFile = File(file, "strings.xml")
+            if (stringsFile.exists()) {
+                langCode
+            } else {
+                null
+            }
+        } ?: emptyList()
 
         return existingLangDirs.size
     }
