@@ -67,6 +67,9 @@ There is need to handle symbols while translation. If you want to improve the co
 
 
 ## Version History
+**1.12**
+1. Minor bugs fixed
+
 **1.10**
 1. Moved hash dir to root project to maintain hashes even after clean or rebuild project
 2. Fixed delete whole language values dir.
