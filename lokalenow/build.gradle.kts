@@ -1,7 +1,7 @@
 plugins {
     id("maven-publish")
     `kotlin-dsl`
-    id("com.gradle.plugin-publish") version "1.1.0"
+    id("com.gradle.plugin-publish") version "1.3.0"
 }
 
 extra["PUBLISH_GROUP_ID"] = "io.github.farimarwat"
@@ -47,7 +47,7 @@ gradlePlugin {
     }
 }
 dependencies {
-    implementation("com.android.tools.build:gradle:7.4.2")
+    implementation("com.android.tools.build:gradle:8.9.0")
     //implementation("org.javassist:javassist:3.29.2-GA")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation ("com.google.code.gson:gson:2.10.1")

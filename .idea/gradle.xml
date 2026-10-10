@@ -6,8 +6,7 @@
       <GradleProjectSettings>
         <option name="testRunner" value="CHOOSE_PER_TEST" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="E:/software/Android/gradle-7.6" />
-        <option name="gradleJvm" value="#GRADLE_LOCAL_JAVA_HOME" />
+        <option name="gradleJvm" value="jbr-25" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
@@ -15,7 +14,6 @@
             <option value="$PROJECT_DIR$/lokalenow" />
           </set>
         </option>
-        <option name="resolveExternalAnnotations" value="false" />
       </GradleProjectSettings>
     </option>
   </component>
