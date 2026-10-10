@@ -36,7 +36,7 @@ class Translator private constructor(builder: Builder) {
      * Translates only translatable nodes. A node is returned only if all of its parts
      * translated successfully; failed nodes are recorded in [getFailedNames].
      */
-    fun translate(lang: String, onProgress: ((Int) -> Unit)? = null): List<LNode> {
+    fun translate(lang: String): List<LNode> {
         val translatedNodes = mutableListOf<LNode>()
         val translatableNodes = nodes.filter { it.translatable }
         var totalItems = 0
@@ -51,13 +51,8 @@ class Translator private constructor(builder: Builder) {
         var done = 0
         fun progress() {
             done++
-            val percent = (done * 100) / totalItems
-            if (onProgress != null) {
-                onProgress(percent)
-            } else {
-                System.out.print("\r  [$percent%] Translating for: $lang    ")
-                System.out.flush()
-            }
+            System.out.print("\r  [${(done * 100) / totalItems}%] Translating for: $lang    ")
+            System.out.flush()
         }
 
         for (node in translatableNodes) {
@@ -101,7 +96,7 @@ class Translator private constructor(builder: Builder) {
                 }
             }
         }
-        if (totalItems > 0 && onProgress == null) System.out.println()
+        if (totalItems > 0) System.out.println()
         return translatedNodes
     }
 }
