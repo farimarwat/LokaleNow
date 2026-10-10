@@ -8,9 +8,9 @@ plugins {
   ...
   ...
   // for kotlin
-  id("io.github.farimarwat.lokalenow") version "1.12"
+  id("io.github.farimarwat.lokalenow") version "1.14"
   //for groovy
-  id "io.github.farimarwat.lokalenow" version "1.12"
+  id "io.github.farimarwat.lokalenow" version "1.14"
 }
 ```
 
@@ -65,6 +65,12 @@ Kindly perform these steps:
 ## What Next:
 There is need to handle symbols while translation. If you want to improve the conversion process then feel free to contribute.
 
+
+## Version History
+**1.14**
+1. Minor bugs fixed
+2. Multi-Module translation added
+3. Plurals, CDATA and string arrays translation added
 
 ## Version History
 **1.12**
