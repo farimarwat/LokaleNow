@@ -8,6 +8,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
+import org.gradle.api.tasks.Internal
 abstract class LokaleNowTask : DefaultTask() {
     @get:Input
     var languages = listOf<String>()
@@ -15,23 +16,23 @@ abstract class LokaleNowTask : DefaultTask() {
     @get:Input
     var activate = true
 
+    // Module path -> module folder, collected at configuration time by the plugin
+    @get:Internal
+    var modules: Map<String, File> = emptyMap()
+
     @TaskAction
     fun doTranslate() {
         if (!activate) return
 
-        val rootProject = project.rootProject
-        val allProjects = rootProject.allprojects
-
-        for (proj in allProjects) {
-            val projPath = proj.layout.projectDirectory.toString()
+        for ((name, dir) in modules) {
             val stringsFile = File(
-                projPath,
+                dir,
                 "src${File.separator}main${File.separator}res${File.separator}values${File.separator}strings.xml"
             )
             if (!stringsFile.exists()) continue
 
-            println("LokaleNow: Processing module -> ${proj.name}")
-            processModule(projPath)
+            println("LokaleNow: Processing module -> $name")
+            processModule(dir.path)
         }
     }
 
