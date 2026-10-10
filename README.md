@@ -67,6 +67,12 @@ There is need to handle symbols while translation. If you want to improve the co
 
 
 ## Version History
+**1.14**
+1. Minor bugs fixed
+2. Multi-Module translation added
+3. Plurals, CDATA and string arrays translation added
+
+## Version History
 **1.12**
 1. Minor bugs fixed
 
