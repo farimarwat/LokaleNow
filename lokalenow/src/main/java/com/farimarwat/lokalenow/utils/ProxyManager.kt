@@ -18,8 +18,9 @@ import java.util.concurrent.TimeUnit
  */
 class ProxyManager(
     private val baseClient: OkHttpClient,
-    private val topCount: Int = TOP_COUNT
+    topCount: Int = TOP_COUNT
 ) {
+    private val topCount = topCount.coerceIn(1, MAX_COUNT)
     private data class ProxyItem(val type: Proxy.Type, val host: String, val port: Int) {
         fun toProxy(): Proxy = Proxy(type, InetSocketAddress(host, port))
         override fun toString(): String =
@@ -176,6 +177,7 @@ class ProxyManager(
 
     companion object {
         private const val TOP_COUNT = 10
+        const val MAX_COUNT = 20
         private const val THREADS = 200
         private const val FETCH_TIMEOUT_SEC = 10L
         private const val TEST_TIMEOUT_SEC = 6L

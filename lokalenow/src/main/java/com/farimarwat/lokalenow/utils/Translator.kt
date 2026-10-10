@@ -7,6 +7,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.net.Proxy
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 class Translator private constructor(builder: Builder) {
     private val nodes: List<LNode>
@@ -102,8 +105,15 @@ class Translator private constructor(builder: Builder) {
 }
 
 object NetworkHelper {
-    private val client = OkHttpClient()
+    internal val client = OkHttpClient()
     private const val MAX_ATTEMPTS = 3
+    private const val PROXY_CALL_TIMEOUT_SEC = 15L
+
+    /** Set by the task when useProxy is on. Null means direct connection only. */
+    @Volatile
+    var proxyManager: ProxyManager? = null
+
+    private val proxyClients = ConcurrentHashMap<Proxy, OkHttpClient>()
 
     /**
      * Translates one Android string value (as written inside the XML element) and returns it
@@ -125,20 +135,39 @@ object NetworkHelper {
             .build()
 
         for (attempt in 1..MAX_ATTEMPTS) {
+            // Every attempt takes the next proxy; the last attempt always goes direct
+            val manager = proxyManager
+            val proxy = if (attempt < MAX_ATTEMPTS) manager?.next() else null
+            val callClient = if (proxy != null) clientFor(proxy) else client
+            val via = if (proxy != null) " via ${proxy.address()}" else ""
+
             try {
-                client.newCall(request).execute().use { response ->
+                callClient.newCall(request).execute().use { response ->
                     if (response.isSuccessful) {
                         val body = response.body?.string() ?: return null
                         return parseResponse(body)
                     }
-                    println("\n  LokaleNow: HTTP ${response.code} for '$lang' (attempt $attempt/$MAX_ATTEMPTS)")
+                    println("\n  LokaleNow: HTTP ${response.code} for '$lang'$via (attempt $attempt/$MAX_ATTEMPTS)")
                 }
             } catch (e: Exception) {
-                println("\n  LokaleNow: ${e.message} for '$lang' (attempt $attempt/$MAX_ATTEMPTS)")
+                println("\n  LokaleNow: ${e.message} for '$lang'$via (attempt $attempt/$MAX_ATTEMPTS)")
             }
-            if (attempt < MAX_ATTEMPTS) Thread.sleep(1000L * attempt)
+
+            if (proxy != null) {
+                manager?.markFailed(proxy)
+                proxyClients.remove(proxy)
+            } else if (attempt < MAX_ATTEMPTS) {
+                Thread.sleep(1000L * attempt)
+            }
         }
         return null
+    }
+
+    private fun clientFor(proxy: Proxy): OkHttpClient = proxyClients.getOrPut(proxy) {
+        client.newBuilder()
+            .proxy(proxy)
+            .callTimeout(PROXY_CALL_TIMEOUT_SEC, TimeUnit.SECONDS)
+            .build()
     }
 
     private fun parseResponse(body: String): String? {
