@@ -43,4 +43,17 @@
         <item>Grün</item>
         <item>Blau</item>
     </string-array>
+
+    <!-- Placeholder tests -->
+    <string name="welcome_user">Willkommen %1$s, Sie haben %2$d neue Nachrichten</string>
+    <string name="discount">Sie sparen heute %.2f%%</string>
+    <string name="two_lines">Erste Zeile\nZweite Zeile</string>
+    <string name="named_arg">Hallo {name}, willkommen zurück</string>
+    <string name="ref_test">@string/app_name</string>
+    <string name="bold_word">Dies ist ein <b>sehr wichtiger</b> Text</string>
+
+    <plurals name="files_deleted">
+        <item quantity="one">%1$d Datei gelöscht aus %2$s</item>
+        <item quantity="other">%1$d Dateien gelöscht von %2$s</item>
+    </plurals>
 </resources>

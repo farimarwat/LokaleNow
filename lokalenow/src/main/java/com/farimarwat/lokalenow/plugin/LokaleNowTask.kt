@@ -46,6 +46,7 @@ abstract class LokaleNowTask : DefaultTask() {
         val allNodes = ldoc.getAllNodes() ?: return
         val sourceNodes = allNodes.filter { it.translatable }
         val changedNames = ldoc.getChangedNodeNames()
+        val failedNames = mutableSetOf<String>()
 
         languages.forEach { lang ->
             val existing = ldoc.readLocalized(lang)
@@ -59,11 +60,12 @@ abstract class LokaleNowTask : DefaultTask() {
             val translatedByName = if (nodesToTranslate.isEmpty()) {
                 emptyMap()
             } else {
-                Translator.Builder()
+                val translator = Translator.Builder()
                     .addNodes(nodesToTranslate)
                     .build()
-                    .translate(lang)
-                    .associateBy { it.name }
+                val result = translator.translate(lang).associateBy { it.name }
+                failedNames.addAll(translator.getFailedNames())
+                result
             }
 
             // Keep existing translations, replace changed ones, drop deleted ones
@@ -74,7 +76,10 @@ abstract class LokaleNowTask : DefaultTask() {
             }
             ldoc.saveLocalized(lang, finalNodes)
         }
-        ldoc.saveHashes()
+        if (failedNames.isNotEmpty()) {
+            println("  LokaleNow: could not translate ${failedNames.joinToString()}. Will retry on next build.")
+        }
+        ldoc.saveHashes(failedNames)
     }
 
     /**

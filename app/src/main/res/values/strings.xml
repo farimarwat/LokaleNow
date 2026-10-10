@@ -43,4 +43,17 @@
         <item>Green</item>
         <item>Blue</item>
     </string-array>
+
+    <!-- Placeholder tests -->
+    <string name="welcome_user">Welcome %1$s, you have %2$d new messages</string>
+    <string name="discount">You save %.2f%% today</string>
+    <string name="two_lines">First line\nSecond line</string>
+    <string name="named_arg">Hello {name}, welcome back</string>
+    <string name="ref_test">@string/app_name</string>
+    <string name="bold_word">This is <b>very important</b> text</string>
+
+    <plurals name="files_deleted">
+        <item quantity="one">%1$d file deleted from %2$s</item>
+        <item quantity="other">%1$d files deleted from %2$s</item>
+    </plurals>
 </resources>

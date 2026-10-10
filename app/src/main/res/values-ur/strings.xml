@@ -43,4 +43,17 @@
         <item>سبز</item>
         <item>نیلا</item>
     </string-array>
+
+    <!-- Placeholder tests -->
+    <string name="welcome_user">خوش آمدید %1$s، آپ کے پاس %2$d نئے پیغامات ہیں۔</string>
+    <string name="discount">آپ آج %.2f%% بچاتے ہیں۔</string>
+    <string name="two_lines">پہلی لائن\nدوسری لائن</string>
+    <string name="named_arg">ہیلو {name}، دوبارہ خوش آمدید</string>
+    <string name="ref_test">@string/app_name</string>
+    <string name="bold_word">یہ <b>انتہائی اہم</b> متن ہے۔</string>
+
+    <plurals name="files_deleted">
+        <item quantity="one">%1$d فائل %2$s سے حذف کر دی گئی</item>
+        <item quantity="other">%2$s سے %1$d فائلیں حذف کر دی گئیں</item>
+    </plurals>
 </resources>

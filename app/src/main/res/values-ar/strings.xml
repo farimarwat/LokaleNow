@@ -43,4 +43,17 @@
         <item>أخضر</item>
         <item>أزرق</item>
     </string-array>
+
+    <!-- Placeholder tests -->
+    <string name="welcome_user">مرحبًا %1$s، لديك %2$d رسالة جديدة</string>
+    <string name="discount">يمكنك حفظ %.2f%% اليوم</string>
+    <string name="two_lines">السطر الأول\nالسطر الثاني</string>
+    <string name="named_arg">مرحبًا {name}، مرحبًا بعودتك</string>
+    <string name="ref_test">@string/app_name</string>
+    <string name="bold_word">هذا نص <b>مهم جدًا</b>.</string>
+
+    <plurals name="files_deleted">
+        <item quantity="one">تم حذف ملف %1$d من %2$s</item>
+        <item quantity="other">تم حذف %1$d ملف من %2$s</item>
+    </plurals>
 </resources>

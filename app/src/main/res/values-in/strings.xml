@@ -43,4 +43,17 @@
         <item>Hijau</item>
         <item>Biru</item>
     </string-array>
+
+    <!-- Placeholder tests -->
+    <string name="welcome_user">Selamat datang %1$s, Anda mendapat %2$d pesan baru</string>
+    <string name="discount">Anda menghemat %.2f%% hari ini</string>
+    <string name="two_lines">Baris pertama\nBaris kedua</string>
+    <string name="named_arg">Halo {name}, selamat datang kembali</string>
+    <string name="ref_test">@string/app_name</string>
+    <string name="bold_word">Ini adalah teks <b>sangat penting</b></string>
+
+    <plurals name="files_deleted">
+        <item quantity="one">%1$d berkas dihapus dari %2$s</item>
+        <item quantity="other">%1$d file dihapus dari %2$s</item>
+    </plurals>
 </resources>

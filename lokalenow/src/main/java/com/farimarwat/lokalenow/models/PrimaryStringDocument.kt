@@ -284,16 +284,20 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         return storedHash != currentHash
     }
 
-    fun saveHashes() {
+    /**
+     * Saves hashes so unchanged strings are not translated again.
+     * Names in [skipNames] (failed translations) are left out so they are retried next build.
+     */
+    fun saveHashes(skipNames: Set<String> = emptySet()) {
         val hashFile = getHashFile(STRINGS_XML_HASH_FILE_NAME)
         val currentHash = mStringsFile.calculateFileHash()
         hashFile.writeText(currentHash)
-        saveNodeHashes()
+        saveNodeHashes(skipNames)
     }
 
-    private fun saveNodeHashes() {
+    private fun saveNodeHashes(skipNames: Set<String>) {
         val nodeHashFile = getHashFile(NODES_HASH_FILE_NAME)
-        val nodes = loadStringXmlNodes()
+        val nodes = loadStringXmlNodes().filter { it.name !in skipNames }
         val content = nodes.joinToString("\n") { node ->
             val hash = when (node.type) {
                 NodeType.STRING -> node.value.hashCode()
