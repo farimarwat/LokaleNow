@@ -1,5 +1,6 @@
 package com.farimarwat.lokalenow.plugin
 
+import com.farimarwat.lokalenow.models.LNode
 import com.farimarwat.lokalenow.models.NodeType
 import com.farimarwat.lokalenow.models.PrimaryStringDocument
 import com.farimarwat.lokalenow.utils.Translator
@@ -7,8 +8,6 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
-
-
 abstract class LokaleNowTask : DefaultTask() {
     @get:Input
     var languages = listOf<String>()
@@ -45,45 +44,59 @@ abstract class LokaleNowTask : DefaultTask() {
         cleanUpOldLanguages(path)
 
         val allNodes = ldoc.getAllNodes() ?: return
+        val sourceNodes = allNodes.filter { it.translatable }
+        val changedNames = ldoc.getChangedNodeNames()
 
         languages.forEach { lang ->
-            val langFolder = File(
-                path,
-                "src${File.separator}main${File.separator}res${File.separator}values-$lang"
-            )
-            val translatedXmlFile = File(langFolder, PrimaryStringDocument.STRINGS_XML_FILE_NAME)
+            val existing = ldoc.readLocalized(lang)
 
-            if (!translatedXmlFile.exists() || ldoc.isModified()) {
-                val nodesToTranslate = if (translatedXmlFile.exists() && ldoc.getModifiedNodes() != null) {
-                    ldoc.getModifiedNodes()!!
-                } else {
-                    allNodes
-                }
+            // Only new strings, strings whose English text changed, or strings whose type changed
+            val nodesToTranslate = sourceNodes.filter { node ->
+                val old = existing[node.name]
+                old == null || old.type != node.type || node.name in changedNames
+            }
 
-                val translator = Translator.Builder()
+            val translatedByName = if (nodesToTranslate.isEmpty()) {
+                emptyMap()
+            } else {
+                Translator.Builder()
                     .addNodes(nodesToTranslate)
                     .build()
-                val translated = translator.translate(lang)
-                ldoc.saveLocalized(lang, translated)
+                    .translate(lang)
+                    .associateBy { it.name }
             }
+
+            // Keep existing translations, replace changed ones, drop deleted ones
+            val finalNodes = linkedMapOf<String, LNode>()
+            for (node in sourceNodes) {
+                val result = translatedByName[node.name] ?: existing[node.name] ?: continue
+                finalNodes[node.name] = result
+            }
+            ldoc.saveLocalized(lang, finalNodes)
         }
         ldoc.saveHashes()
     }
 
+    /**
+     * Removes translations for languages no longer in the list.
+     * Only deletes strings.xml files this plugin generated; other files and folders
+     * (values-night, values-v21, dimens.xml, etc.) are never touched.
+     */
     private fun cleanUpOldLanguages(projectPath: String) {
         val resDir = File(projectPath, "src${File.separator}main${File.separator}res")
-        val existingLangDirs = resDir.listFiles { file ->
+        val langDirs = resDir.listFiles { file ->
             file.isDirectory && file.name.startsWith("values-")
-        }?.map { it.name.substringAfter("values-") } ?: emptyList()
+        } ?: return
 
-        val languagesToRemove = existingLangDirs.filterNot { it in languages }
+        for (dir in langDirs) {
+            val lang = dir.name.substringAfter("values-")
+            if (lang in languages) continue
+            val stringsFile = File(dir, PrimaryStringDocument.STRINGS_XML_FILE_NAME)
+            if (!PrimaryStringDocument.isGeneratedFile(stringsFile)) continue
 
-        languagesToRemove.forEach { lang ->
-            val langDir = File(resDir, "values-$lang")
-            if (langDir.exists()) {
-                println("  Removing directory for language: $lang")
-                deleteDirectory(langDir)
-            }
+            println("  Removing translations for: $lang")
+            stringsFile.delete()
+            if (dir.listFiles()?.isEmpty() == true) dir.delete()
         }
     }
 

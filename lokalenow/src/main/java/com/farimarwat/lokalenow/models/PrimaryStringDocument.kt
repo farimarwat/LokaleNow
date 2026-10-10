@@ -12,6 +12,7 @@ import javax.xml.transform.OutputKeys
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
+
 class PrimaryStringDocument private constructor(builder: Builder) {
     private val mProjDir: File
     private val mStringsFile: File
@@ -21,6 +22,13 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     private val mNodeHashes: Map<String, Int>
     private val mModifiedNodes: List<LNode>
     private var mNodesToDelete: List<String>? = null
+    private val mLayout: List<LayoutEntry>
+
+    private sealed class LayoutEntry {
+        data class Resource(val name: String) : LayoutEntry()
+        data class Comment(val text: String) : LayoutEntry()
+        object BlankLine : LayoutEntry()
+    }
 
     class Builder(val projDir: File) {
         fun build(): PrimaryStringDocument = PrimaryStringDocument(this)
@@ -30,27 +38,34 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         mProjDir = builder.projDir
         mStringsFile = File("${mProjDir}$VALUES_PATH$STRINGS_XML_FILE_NAME")
 
-        mDocument = try {
-            val factory = DocumentBuilderFactory.newInstance()
-            val documentBuilder = factory.newDocumentBuilder()
-            FileInputStream(mStringsFile).use { stream ->
-                documentBuilder.parse(stream)
-            }
-        } catch (ex: Exception) {
-            println("Error creating LDocument: $ex")
-            null
-        }
+        mDocument = parseXmlFile(mStringsFile)
         mNodeHashes = loadNodeHashes()
         mAllNodes = loadStringXmlNodes()
         mModifiedNodes = listModifiedNodes()
         mNodesToDelete = listDeletedNodes()
+        mLayout = loadLayout()
         mInputStream = null
     }
 
-    private fun loadStringXmlNodes(): List<LNode> {
+    private fun parseXmlFile(file: File): Document? {
+        return try {
+            val factory = DocumentBuilderFactory.newInstance()
+            val documentBuilder = factory.newDocumentBuilder()
+            FileInputStream(file).use { stream ->
+                documentBuilder.parse(stream)
+            }
+        } catch (ex: Exception) {
+            println("Error reading ${file.path}: $ex")
+            null
+        }
+    }
+
+    private fun loadStringXmlNodes(): List<LNode> = parseNodes(mDocument)
+
+    private fun parseNodes(document: Document?): List<LNode> {
         val list = mutableListOf<LNode>()
         try {
-            mDocument?.let { doc ->
+            document?.let { doc ->
                 val nodes = doc.documentElement.childNodes
                 for (i in 0 until nodes.length) {
                     val node = nodes.item(i) as? Element ?: continue
@@ -125,6 +140,37 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         return list
     }
 
+    /**
+     * Records the order of resources, comments and blank lines in the original strings.xml,
+     * so every language file can be written in the same layout.
+     */
+    private fun loadLayout(): List<LayoutEntry> {
+        val layout = mutableListOf<LayoutEntry>()
+        val doc = mDocument ?: return layout
+        val children = doc.documentElement.childNodes
+        for (i in 0 until children.length) {
+            val child = children.item(i)
+            when (child.nodeType) {
+                Node.TEXT_NODE -> {
+                    val text = child.nodeValue
+                    if (text.isBlank()) {
+                        val blankLines = text.count { it == '\n' } - 1
+                        val isEdge = i == 0 || i == children.length - 1
+                        if (!isEdge) repeat(blankLines.coerceAtLeast(0)) { layout.add(LayoutEntry.BlankLine) }
+                    }
+                }
+                Node.COMMENT_NODE -> layout.add(LayoutEntry.Comment(child.nodeValue))
+                Node.ELEMENT_NODE -> {
+                    val element = child as Element
+                    if (element.tagName in RESOURCE_TAGS) {
+                        layout.add(LayoutEntry.Resource(element.getAttribute("name")))
+                    }
+                }
+            }
+        }
+        return layout
+    }
+
     private fun hasCDataChild(element: Element): Boolean {
         val children = element.childNodes
         for (i in 0 until children.length) {
@@ -160,6 +206,25 @@ class PrimaryStringDocument private constructor(builder: Builder) {
 
     fun getModifiedNodes(): List<LNode>? {
         return if (mModifiedNodes.isNotEmpty()) mModifiedNodes else null
+    }
+
+    /**
+     * Names of resources whose English text changed since the last run.
+     * Empty when there are no saved hashes yet (first run or after clean),
+     * so existing translations are kept instead of translating everything again.
+     */
+    fun getChangedNodeNames(): Set<String> {
+        if (mNodeHashes.isEmpty()) return emptySet()
+        return mModifiedNodes.map { it.name }.toSet()
+    }
+
+    /**
+     * Reads the existing values-[lang]/strings.xml, if any, keyed by resource name.
+     */
+    fun readLocalized(lang: String): Map<String, LNode> {
+        val file = getLocalizedFile(lang)
+        if (!file.exists() || file.length() == 0L) return emptyMap()
+        return parseNodes(parseXmlFile(file)).associateBy { it.name }
     }
 
     private fun loadNodeHashes(): Map<String, Int> {
@@ -257,50 +322,72 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         return hashDir
     }
 
-    fun saveLocalized(lang: String, translatedNodes: List<LNode>) {
+    private fun getLocalizedFile(lang: String): File {
         val localizedValuesDir = File(
             mProjDir,
             "src${File.separator}main${File.separator}res${File.separator}values-$lang"
         )
-        localizedValuesDir.mkdirs()
-        val translatedXmlFile = File(localizedValuesDir, STRINGS_XML_FILE_NAME)
-        saveXmlFile(translatedNodes, translatedXmlFile)
+        return File(localizedValuesDir, STRINGS_XML_FILE_NAME)
     }
 
-    private fun saveXmlFile(nodes: List<LNode>, outputFile: File) {
+    /**
+     * Writes values-[lang]/strings.xml in the same order as the original strings.xml,
+     * including comments and blank lines. Resources missing from [nodesByName] are skipped.
+     */
+    fun saveLocalized(lang: String, nodesByName: Map<String, LNode>) {
+        val translatedXmlFile = getLocalizedFile(lang)
+        translatedXmlFile.parentFile.mkdirs()
+        saveXmlFile(nodesByName, translatedXmlFile)
+    }
+
+    private fun saveXmlFile(nodesByName: Map<String, LNode>, outputFile: File) {
         val sb = StringBuilder()
         sb.appendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+        sb.appendLine("<!--$GENERATED_MARKER-->")
         sb.appendLine("<resources>")
 
-        for (node in nodes) {
-            when (node.type) {
-                NodeType.STRING -> {
-                    val value = if (node.isCData) {
-                        "<![CDATA[${node.value}]]>"
-                    } else {
-                        node.value
-                    }
-                    sb.appendLine("    <string name=\"${node.name}\">$value</string>")
-                }
-                NodeType.PLURALS -> {
-                    sb.appendLine("    <plurals name=\"${node.name}\">")
-                    for ((quantity, value) in node.pluralItems) {
-                        sb.appendLine("        <item quantity=\"$quantity\">$value</item>")
-                    }
-                    sb.appendLine("    </plurals>")
-                }
-                NodeType.STRING_ARRAY -> {
-                    sb.appendLine("    <string-array name=\"${node.name}\">")
-                    for (value in node.arrayItems) {
-                        sb.appendLine("        <item>$value</item>")
-                    }
-                    sb.appendLine("    </string-array>")
+        for (entry in mLayout) {
+            when (entry) {
+                is LayoutEntry.BlankLine -> sb.appendLine()
+                is LayoutEntry.Comment -> sb.appendLine("    <!--${entry.text}-->")
+                is LayoutEntry.Resource -> {
+                    val node = nodesByName[entry.name] ?: continue
+                    appendNode(sb, node)
                 }
             }
         }
 
         sb.appendLine("</resources>")
-        outputFile.writeText(sb.toString())
+        val content = sb.toString()
+        if (outputFile.exists() && outputFile.readText() == content) return
+        outputFile.writeText(content)
+    }
+
+    private fun appendNode(sb: StringBuilder, node: LNode) {
+        when (node.type) {
+            NodeType.STRING -> {
+                val value = if (node.isCData) {
+                    "<![CDATA[${node.value}]]>"
+                } else {
+                    node.value
+                }
+                sb.appendLine("    <string name=\"${node.name}\">$value</string>")
+            }
+            NodeType.PLURALS -> {
+                sb.appendLine("    <plurals name=\"${node.name}\">")
+                for ((quantity, value) in node.pluralItems) {
+                    sb.appendLine("        <item quantity=\"$quantity\">$value</item>")
+                }
+                sb.appendLine("    </plurals>")
+            }
+            NodeType.STRING_ARRAY -> {
+                sb.appendLine("    <string-array name=\"${node.name}\">")
+                for (value in node.arrayItems) {
+                    sb.appendLine("        <item>$value</item>")
+                }
+                sb.appendLine("    </string-array>")
+            }
+        }
     }
 
     private fun removeWhitespaceNodes(node: Node) {
@@ -319,9 +406,19 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         const val STRINGS_XML_FILE_NAME = "strings.xml"
         const val STRINGS_XML_HASH_FILE_NAME = "strings.hash"
         const val NODES_HASH_FILE_NAME = "nodes.hash"
+        const val GENERATED_MARKER = " Generated by LokaleNow "
+        private val RESOURCE_TAGS = setOf("string", "plurals", "string-array")
         val VALUES_PATH =
             "${File.separator}src${File.separator}main${File.separator}res${File.separator}values${File.separator}"
         val PATH_RES =
             "${File.separator}src${File.separator}main${File.separator}res${File.separator}"
+
+        /**
+         * True only for strings.xml files this plugin wrote, so hand-made files are never deleted.
+         */
+        fun isGeneratedFile(file: File): Boolean {
+            if (!file.exists()) return false
+            return file.useLines { lines -> lines.take(3).any { it.contains(GENERATED_MARKER.trim()) } }
+        }
     }
 }
