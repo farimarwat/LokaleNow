@@ -3,6 +3,8 @@ package com.farimarwat.lokalenow.plugin
 import com.farimarwat.lokalenow.models.LNode
 import com.farimarwat.lokalenow.models.NodeType
 import com.farimarwat.lokalenow.models.PrimaryStringDocument
+import com.farimarwat.lokalenow.utils.NetworkHelper
+import com.farimarwat.lokalenow.utils.ProxyManager
 import com.farimarwat.lokalenow.utils.Translator
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.Input
@@ -16,6 +18,14 @@ abstract class LokaleNowTask : DefaultTask() {
     @get:Input
     var activate = true
 
+    @get:Input
+    var useProxy = false
+
+    @get:Input
+    var proxyCount = 10
+
+    private var proxiesLoaded = false
+
     // Module path -> module folder, collected at configuration time by the plugin
     @get:Internal
     var modules: Map<String, File> = emptyMap()
@@ -24,15 +34,41 @@ abstract class LokaleNowTask : DefaultTask() {
     fun doTranslate() {
         if (!activate) return
 
-        for ((name, dir) in modules) {
-            val stringsFile = File(
-                dir,
-                "src${File.separator}main${File.separator}res${File.separator}values${File.separator}strings.xml"
-            )
-            if (!stringsFile.exists()) continue
+        try {
+            for ((name, dir) in modules) {
+                val stringsFile = File(
+                    dir,
+                    "src${File.separator}main${File.separator}res${File.separator}values${File.separator}strings.xml"
+                )
+                if (!stringsFile.exists()) continue
 
-            println("LokaleNow: Processing module -> $name")
-            processModule(dir.path)
+                println("LokaleNow: Processing module -> $name")
+                processModule(dir.path)
+            }
+        } finally {
+            // Gradle daemon keeps objects alive between builds, so always reset
+            NetworkHelper.proxyManager?.let { manager ->
+                manager.close()
+                println(manager.summary())
+            }
+            NetworkHelper.proxyManager = null
+            proxiesLoaded = false
+        }
+    }
+
+    /** Loads proxies only once, and only when something actually needs translating. */
+    private fun ensureProxies() {
+        if (!useProxy || proxiesLoaded) return
+        proxiesLoaded = true
+
+        if (proxyCount > ProxyManager.MAX_COUNT) {
+            println("LokaleNow: proxyCount $proxyCount is above max ${ProxyManager.MAX_COUNT}, using ${ProxyManager.MAX_COUNT}")
+        }
+        val manager = ProxyManager(NetworkHelper.client, proxyCount)
+        if (manager.load() > 0) {
+            NetworkHelper.proxyManager = manager
+        } else {
+            println("LokaleNow: No working proxies found. Translating directly.")
         }
     }
 
@@ -61,6 +97,7 @@ abstract class LokaleNowTask : DefaultTask() {
             val translatedByName = if (nodesToTranslate.isEmpty()) {
                 emptyMap()
             } else {
+                ensureProxies()
                 val translator = Translator.Builder()
                     .addNodes(nodesToTranslate)
                     .build()

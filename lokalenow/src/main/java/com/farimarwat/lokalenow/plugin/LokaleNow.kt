@@ -19,6 +19,8 @@ class LokaleNow: Plugin<Project> {
             override fun execute(t: LokaleNowTask) {
                 t.languages = extension.languages
                 t.activate = extension.activate
+                t.useProxy = extension.useProxy
+                t.proxyCount = extension.proxyCount
                 t.modules = findModules(project, owners)
             }
         })

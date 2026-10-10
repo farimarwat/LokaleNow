@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("io.github.farimarwat.lokalenow") version "1.14"
+    id("io.github.farimarwat.lokalenow") version "1.15"
 }
 
 android {
@@ -45,9 +45,11 @@ android {
     }
     
 }
-lokalenow{
-    languages = listOf("ar","ur","in","de")
+lokalenow {
+    languages = listOf("ar", "ur", "in", "de")
     activate = true
+    useProxy = true
+    proxyCount = 20
 }
 
 dependencies {

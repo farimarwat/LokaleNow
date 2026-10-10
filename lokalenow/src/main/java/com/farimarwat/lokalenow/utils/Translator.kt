@@ -139,25 +139,31 @@ object NetworkHelper {
             val manager = proxyManager
             val proxy = if (attempt < MAX_ATTEMPTS) manager?.next() else null
             val callClient = if (proxy != null) clientFor(proxy) else client
-            val via = if (proxy != null) " via ${proxy.address()}" else ""
+            var error = "unknown error"
 
             try {
                 callClient.newCall(request).execute().use { response ->
                     if (response.isSuccessful) {
-                        val body = response.body?.string() ?: return null
-                        return parseResponse(body)
+                        val result = response.body?.string()?.let { parseResponse(it) }
+                        if (result != null) {
+                            if (proxy != null) manager?.markSuccess(proxy)
+                            return result
+                        }
+                        error = "empty response"
+                    } else {
+                        error = "HTTP ${response.code}"
                     }
-                    println("\n  LokaleNow: HTTP ${response.code} for '$lang'$via (attempt $attempt/$MAX_ATTEMPTS)")
                 }
             } catch (e: Exception) {
-                println("\n  LokaleNow: ${e.message} for '$lang'$via (attempt $attempt/$MAX_ATTEMPTS)")
+                error = e.message ?: e.javaClass.simpleName
             }
 
             if (proxy != null) {
-                manager?.markFailed(proxy)
-                proxyClients.remove(proxy)
-            } else if (attempt < MAX_ATTEMPTS) {
-                Thread.sleep(1000L * attempt)
+                // Proxy problems stay silent; the next attempt uses another proxy
+                if (manager?.markFailed(proxy) == true) proxyClients.remove(proxy)
+            } else {
+                println("\n  LokaleNow: $error for '$lang' (attempt $attempt/$MAX_ATTEMPTS)")
+                if (attempt < MAX_ATTEMPTS) Thread.sleep(1000L * attempt)
             }
         }
         return null
@@ -166,6 +172,7 @@ object NetworkHelper {
     private fun clientFor(proxy: Proxy): OkHttpClient = proxyClients.getOrPut(proxy) {
         client.newBuilder()
             .proxy(proxy)
+            .connectTimeout(ProxyManager.CONNECT_TIMEOUT_SEC, TimeUnit.SECONDS)
             .callTimeout(PROXY_CALL_TIMEOUT_SEC, TimeUnit.SECONDS)
             .build()
     }
