@@ -8,9 +8,9 @@ plugins {
   ...
   ...
   // for kotlin
-  id("io.github.farimarwat.lokalenow") version "1.14"
+  id("io.github.farimarwat.lokalenow") version "1.15"
   //for groovy
-  id "io.github.farimarwat.lokalenow" version "1.14"
+  id "io.github.farimarwat.lokalenow" version "1.15"
 }
 ```
 
@@ -67,7 +67,7 @@ There is need to handle symbols while translation. If you want to improve the co
 
 
 ## Version History
-**1.14**
+**1.15**
 1. Minor bugs fixed
 2. Multi-Module translation added
 3. Plurals, CDATA and string arrays translation added
