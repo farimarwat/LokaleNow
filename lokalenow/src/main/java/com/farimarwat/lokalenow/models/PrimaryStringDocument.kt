@@ -12,7 +12,6 @@ import javax.xml.transform.OutputKeys
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
-
 class PrimaryStringDocument private constructor(builder: Builder) {
     private val mProjDir: File
     private val mStringsFile: File
@@ -23,6 +22,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     private val mModifiedNodes: List<LNode>
     private var mNodesToDelete: List<String>? = null
     private val mLayout: List<LayoutEntry>
+    private val mRootAttributes: String
 
     private sealed class LayoutEntry {
         data class Resource(val name: String) : LayoutEntry()
@@ -44,6 +44,9 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         mModifiedNodes = listModifiedNodes()
         mNodesToDelete = listDeletedNodes()
         mLayout = loadLayout()
+        mRootAttributes = mDocument?.documentElement?.let { root ->
+            readAllAttributes(root).entries.joinToString("") { (key, value) -> " $key=\"${escapeAttribute(value)}\"" }
+        } ?: ""
         mInputStream = null
     }
 
@@ -75,6 +78,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
                     } else {
                         true
                     }
+                    val attributes = readExtraAttributes(node)
 
                     when (node.tagName) {
                         "string" -> {
@@ -86,12 +90,14 @@ class PrimaryStringDocument private constructor(builder: Builder) {
                                     value = value,
                                     translatable = translatable,
                                     type = NodeType.STRING,
-                                    isCData = isCData
+                                    isCData = isCData,
+                                    attributes = attributes
                                 )
                             )
                         }
                         "plurals" -> {
                             val items = linkedMapOf<String, String>()
+                            val cdataItems = mutableSetOf<String>()
                             val children = node.childNodes
                             for (j in 0 until children.length) {
                                 val child = children.item(j) as? Element ?: continue
@@ -100,6 +106,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
                                     val isCData = hasCDataChild(child)
                                     val value = if (isCData) getCDataContent(child) else getInnerXml(child)
                                     items[quantity] = value
+                                    if (isCData) cdataItems.add(quantity)
                                 }
                             }
                             list.add(
@@ -108,17 +115,22 @@ class PrimaryStringDocument private constructor(builder: Builder) {
                                     value = "",
                                     translatable = translatable,
                                     type = NodeType.PLURALS,
-                                    pluralItems = items
+                                    pluralItems = items,
+                                    cdataItems = cdataItems,
+                                    attributes = attributes
                                 )
                             )
                         }
                         "string-array" -> {
                             val items = mutableListOf<String>()
+                            val cdataItems = mutableSetOf<String>()
                             val children = node.childNodes
                             for (j in 0 until children.length) {
                                 val child = children.item(j) as? Element ?: continue
                                 if (child.tagName == "item") {
-                                    items.add(getInnerXml(child))
+                                    val isCData = hasCDataChild(child)
+                                    if (isCData) cdataItems.add(items.size.toString())
+                                    items.add(if (isCData) getCDataContent(child) else getInnerXml(child))
                                 }
                             }
                             list.add(
@@ -127,7 +139,9 @@ class PrimaryStringDocument private constructor(builder: Builder) {
                                     value = "",
                                     translatable = translatable,
                                     type = NodeType.STRING_ARRAY,
-                                    arrayItems = items
+                                    arrayItems = items,
+                                    cdataItems = cdataItems,
+                                    attributes = attributes
                                 )
                             )
                         }
@@ -169,6 +183,24 @@ class PrimaryStringDocument private constructor(builder: Builder) {
             }
         }
         return layout
+    }
+
+    /**
+     * Attributes other than name and translatable (for example formatted="false"),
+     * so they are written to every language file too.
+     */
+    private fun readExtraAttributes(element: Element): Map<String, String> {
+        return readAllAttributes(element).filterKeys { it != "name" && it != "translatable" }
+    }
+
+    private fun readAllAttributes(element: Element): Map<String, String> {
+        val result = linkedMapOf<String, String>()
+        val attrs = element.attributes
+        for (i in 0 until attrs.length) {
+            val attr = attrs.item(i)
+            result[attr.nodeName] = attr.nodeValue
+        }
+        return result
     }
 
     private fun hasCDataChild(element: Element): Boolean {
@@ -228,7 +260,11 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     }
 
     private fun loadNodeHashes(): Map<String, Int> {
-        val nodeHashFile = getHashFile(NODES_HASH_FILE_NAME)
+        var nodeHashFile = getHashFile(NODES_HASH_FILE_NAME)
+        if (!nodeHashFile.exists()) {
+            // Hashes from older plugin versions were kept in build/hashes
+            nodeHashFile = File(mProjDir, "build${File.separator}hashes${File.separator}$NODES_HASH_FILE_NAME")
+        }
         val map = mutableMapOf<String, Int>()
         if (nodeHashFile.exists()) {
             nodeHashFile.forEachLine { line ->
@@ -318,10 +354,12 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         return File(hashDir, hashFileName)
     }
 
+    /**
+     * Hashes are kept in <module>/.lokalenow so they survive gradle clean.
+     * Commit this folder so other machines and CI know which strings are already translated.
+     */
     private fun getHashDirectory(): File {
-        val buildDir = File(mProjDir, "build")
-        buildDir.mkdirs()
-        val hashDir = File(buildDir, "hashes")
+        val hashDir = File(mProjDir, HASH_DIR_NAME)
         hashDir.mkdirs()
         return hashDir
     }
@@ -348,7 +386,8 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         val sb = StringBuilder()
         sb.appendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
         sb.appendLine("<!--$GENERATED_MARKER-->")
-        sb.appendLine("<resources>")
+        // Keep xmlns:tools etc. so attributes like tools:ignore stay valid
+        sb.appendLine("<resources$mRootAttributes>")
 
         for (entry in mLayout) {
             when (entry) {
@@ -368,30 +407,38 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     }
 
     private fun appendNode(sb: StringBuilder, node: LNode) {
+        val attrs = node.attributes.entries.joinToString("") { (key, value) ->
+            " $key=\"${escapeAttribute(value)}\""
+        }
+        fun wrap(value: String, isCData: Boolean) = if (isCData) "<![CDATA[$value]]>" else value
+
         when (node.type) {
             NodeType.STRING -> {
-                val value = if (node.isCData) {
-                    "<![CDATA[${node.value}]]>"
-                } else {
-                    node.value
-                }
-                sb.appendLine("    <string name=\"${node.name}\">$value</string>")
+                sb.appendLine("    <string name=\"${node.name}\"$attrs>${wrap(node.value, node.isCData)}</string>")
             }
             NodeType.PLURALS -> {
-                sb.appendLine("    <plurals name=\"${node.name}\">")
+                sb.appendLine("    <plurals name=\"${node.name}\"$attrs>")
                 for ((quantity, value) in node.pluralItems) {
-                    sb.appendLine("        <item quantity=\"$quantity\">$value</item>")
+                    val item = wrap(value, quantity in node.cdataItems)
+                    sb.appendLine("        <item quantity=\"$quantity\">$item</item>")
                 }
                 sb.appendLine("    </plurals>")
             }
             NodeType.STRING_ARRAY -> {
-                sb.appendLine("    <string-array name=\"${node.name}\">")
-                for (value in node.arrayItems) {
-                    sb.appendLine("        <item>$value</item>")
+                sb.appendLine("    <string-array name=\"${node.name}\"$attrs>")
+                for ((index, value) in node.arrayItems.withIndex()) {
+                    sb.appendLine("        <item>${wrap(value, index.toString() in node.cdataItems)}</item>")
                 }
                 sb.appendLine("    </string-array>")
             }
         }
+    }
+
+    private fun escapeAttribute(value: String): String {
+        return value
+            .replace("&", "&amp;")
+            .replace("\"", "&quot;")
+            .replace("<", "&lt;")
     }
 
     private fun removeWhitespaceNodes(node: Node) {
@@ -410,6 +457,7 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         const val STRINGS_XML_FILE_NAME = "strings.xml"
         const val STRINGS_XML_HASH_FILE_NAME = "strings.hash"
         const val NODES_HASH_FILE_NAME = "nodes.hash"
+        const val HASH_DIR_NAME = ".lokalenow"
         const val GENERATED_MARKER = " Generated by LokaleNow "
         private val RESOURCE_TAGS = setOf("string", "plurals", "string-array")
         val VALUES_PATH =

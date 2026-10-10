@@ -13,5 +13,7 @@ data class LNode(
     val type: NodeType = NodeType.STRING,
     val pluralItems: Map<String, String> = emptyMap(),
     val arrayItems: List<String> = emptyList(),
-    val isCData: Boolean = false
+    val isCData: Boolean = false,
+    val cdataItems: Set<String> = emptySet(),
+    val attributes: Map<String, String> = emptyMap()
 )

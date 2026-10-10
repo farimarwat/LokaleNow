@@ -71,7 +71,7 @@ class Translator private constructor(builder: Builder) {
                     var failed = false
                     for ((quantity, value) in node.pluralItems) {
                         progress()
-                        val result = NetworkHelper.getTranslation(lang, value, false)
+                        val result = NetworkHelper.getTranslation(lang, value, quantity in node.cdataItems)
                         if (result == null) failed = true else translatedItems[quantity] = result
                     }
                     if (failed) {
@@ -83,9 +83,9 @@ class Translator private constructor(builder: Builder) {
                 NodeType.STRING_ARRAY -> {
                     val translatedItems = mutableListOf<String>()
                     var failed = false
-                    for (value in node.arrayItems) {
+                    for ((index, value) in node.arrayItems.withIndex()) {
                         progress()
-                        val result = NetworkHelper.getTranslation(lang, value, false)
+                        val result = NetworkHelper.getTranslation(lang, value, index.toString() in node.cdataItems)
                         if (result == null) failed = true else translatedItems.add(result)
                     }
                     if (failed) {

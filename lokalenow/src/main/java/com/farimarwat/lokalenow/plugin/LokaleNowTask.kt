@@ -72,7 +72,7 @@ abstract class LokaleNowTask : DefaultTask() {
             val finalNodes = linkedMapOf<String, LNode>()
             for (node in sourceNodes) {
                 val result = translatedByName[node.name] ?: existing[node.name] ?: continue
-                finalNodes[node.name] = result
+                finalNodes[node.name] = result.copy(attributes = node.attributes)
             }
             ldoc.saveLocalized(lang, finalNodes)
         }
