@@ -8,9 +8,9 @@ plugins {
   ...
   ...
   // for kotlin
-  id("io.github.farimarwat.lokalenow") version "1.15"
+  id("io.github.farimarwat.lokalenow") version "1.16"
   //for groovy
-  id "io.github.farimarwat.lokalenow" version "1.15"
+  id "io.github.farimarwat.lokalenow" version "1.16"
 }
 ```
 
@@ -27,22 +27,51 @@ pluginManagement {
 ```
 
 ## Now apply languages
-Outside of the android{} block use this:
+Outside of the `android{}` block, add this:
+
+```kotlin
+android {
+    ...
+}
+
+// Kotlin DSL (build.gradle.kts)
+lokalenow {
+    languages = listOf("fr", "ru", "ar") // target language codes
+    activate = true                      // enable automatic translation
+    useProxy = false                     // optional: send translation requests through proxies
+    proxyCount = 10                      // optional: number of proxies to keep (max 20)
+}
 ```
-android{
-  ...
-  ...
+
+```groovy
+// Groovy DSL (build.gradle)
+lokalenow {
+    languages = ["fr", "ru", "ar"] // target language codes
+    activate = true                // enable automatic translation
+    useProxy = false               // optional: send translation requests through proxies
+    proxyCount = 10                // optional: number of proxies to keep (max 20)
 }
-// for kotlin
-lokalenow{
-     languages = listOf("fr","ru","ar") //target languages codes
-     activate = true /// Enable automatic translation
-}
-// for groovy
-lokalenow{
-     languages = ["fr","ru","ar"] //target languages codes
-     acivate = true // Enable automatic translation
-}
+```
+
+## Proxy support (optional)
+
+### Why use a proxy?
+LokaleNow uses Google Translate's free endpoint. Google limits how many requests one IP address can send. With many strings or many languages, you may see `HTTP 429` errors, and some strings will fail to translate. Turning on `useProxy` spreads the requests across different IP addresses so the translation can finish.
+
+### How it works
+- Free public proxies are fetched and tested against the Google Translate endpoint.
+- The fastest working proxies are kept (`proxyCount`, max 20), plus a backup pool.
+- Requests use the fastest proxy until it fails. Then the next fastest one takes over and retries the same string.
+- Failed proxies are replaced from the backup pool automatically, with no wait.
+- If all proxy attempts fail, LokaleNow tries a direct connection.
+- Proxies are loaded only when there are new or changed strings. If nothing changed, the build doesn't slow down.
+
+### Good to know
+- `useProxy` is **off by default**.
+- The first proxy scan can take up to about 60 seconds.
+- All requests use HTTPS with normal certificate checks, so proxies can't read or change your text.
+- Free proxies are run by unknown third parties and can be slow or unstable. Use this only if you hit rate limits.
+- Using proxies to get around Google's rate limits may go against Google's terms of service. Use it at your own risk.
 ```
 ## Done.
 When you will build, It will automatically generate strings.xml file according to requested languages.
