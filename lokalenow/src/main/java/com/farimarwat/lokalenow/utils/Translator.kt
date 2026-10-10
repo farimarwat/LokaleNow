@@ -107,6 +107,7 @@ class Translator private constructor(builder: Builder) {
 object NetworkHelper {
     internal val client = OkHttpClient()
     private const val MAX_ATTEMPTS = 3
+    private const val MAX_PROXY_SWITCHES = 5
     private const val PROXY_CALL_TIMEOUT_SEC = 15L
 
     /** Set by the task when useProxy is on. Null means direct connection only. */
@@ -134,39 +135,46 @@ object NetworkHelper {
             .url(urlString)
             .build()
 
-        for (attempt in 1..MAX_ATTEMPTS) {
-            // Every attempt takes the next proxy; the last attempt always goes direct
-            val manager = proxyManager
-            val proxy = if (attempt < MAX_ATTEMPTS) manager?.next() else null
-            val callClient = if (proxy != null) clientFor(proxy) else client
-            var error = "unknown error"
-
-            try {
-                callClient.newCall(request).execute().use { response ->
-                    if (response.isSuccessful) {
-                        val result = response.body?.string()?.let { parseResponse(it) }
-                        if (result != null) {
-                            if (proxy != null) manager?.markSuccess(proxy)
-                            return result
-                        }
-                        error = "empty response"
-                    } else {
-                        error = "HTTP ${response.code}"
-                    }
-                }
-            } catch (e: Exception) {
-                error = e.message ?: e.javaClass.simpleName
+        // Sticky: use the fastest proxy until it fails, then switch and retry the same text
+        val manager = proxyManager
+        var proxyTries = 0
+        while (manager != null && proxyTries < MAX_PROXY_SWITCHES) {
+            val proxy = manager.current() ?: break
+            proxyTries++
+            val result = execute(clientFor(proxy), request)
+            if (result.text != null) {
+                manager.markSuccess(proxy)
+                return result.text
             }
+            manager.markFailed(proxy, rateLimited = result.code == 429)
+            proxyClients.remove(proxy)
+        }
 
-            if (proxy != null) {
-                // Proxy problems stay silent; the next attempt uses another proxy
-                if (manager?.markFailed(proxy) == true) proxyClients.remove(proxy)
-            } else {
-                println("\n  LokaleNow: $error for '$lang' (attempt $attempt/$MAX_ATTEMPTS)")
-                if (attempt < MAX_ATTEMPTS) Thread.sleep(1000L * attempt)
-            }
+        // Direct: one last try after proxies, or normal retries when no proxy was used
+        val directAttempts = if (proxyTries > 0) 1 else MAX_ATTEMPTS
+        for (attempt in 1..directAttempts) {
+            val result = execute(client, request)
+            if (result.text != null) return result.text
+            println("\n  LokaleNow: ${result.error} for '$lang' (attempt $attempt/$directAttempts)")
+            if (attempt < directAttempts) Thread.sleep(1000L * attempt)
         }
         return null
+    }
+
+    private class CallResult(val text: String?, val code: Int, val error: String)
+
+    private fun execute(callClient: OkHttpClient, request: Request): CallResult = try {
+        callClient.newCall(request).execute().use { response ->
+            if (response.isSuccessful) {
+                val result = response.body?.string()?.let { parseResponse(it) }
+                if (result != null) CallResult(result, response.code, "")
+                else CallResult(null, response.code, "empty response")
+            } else {
+                CallResult(null, response.code, "HTTP ${response.code}")
+            }
+        }
+    } catch (e: Exception) {
+        CallResult(null, 0, e.message ?: e.javaClass.simpleName)
     }
 
     private fun clientFor(proxy: Proxy): OkHttpClient = proxyClients.getOrPut(proxy) {

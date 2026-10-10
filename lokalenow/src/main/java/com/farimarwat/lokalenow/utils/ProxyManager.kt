@@ -16,9 +16,9 @@ import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 /**
- * Fetches free proxies, tests them against the Google Translate endpoint,
- * and hands out working ones in rotation. When too many die during a build,
- * it quietly tests more in the background.
+ * Scans free proxies against the Google Translate endpoint and keeps the fastest ones.
+ * Requests stick to the fastest proxy until it fails, then switch to the next fastest.
+ * Failed proxies are replaced from a tested backup pool, so the build never waits.
  */
 class ProxyManager(
     private val baseClient: OkHttpClient,
@@ -28,22 +28,27 @@ class ProxyManager(
         fun toProxy(): Proxy = Proxy(type, InetSocketAddress(host, port))
     }
 
+    /** A tested proxy and how fast it answered the test request. */
+    private class Entry(val proxy: Proxy, val latencyMs: Long)
+
     private val topCount = topCount.coerceIn(1, MAX_COUNT)
 
-    private val active = mutableListOf<Proxy>()
-    private val strikes = mutableMapOf<Proxy, Int>()
+    // Fastest first. The first one is the proxy in use.
+    private val active = mutableListOf<Entry>()
+    // Tested spares, fastest first. Rate-limited ones are put at the end.
+    private val backup = mutableListOf<Entry>()
     private val candidates = ArrayDeque<ProxyItem>()
-    private var index = 0
 
     private val refilling = AtomicBoolean(false)
     @Volatile
     private var closed = false
 
     private val viaProxy = AtomicInteger(0)
-    private val dropped = AtomicInteger(0)
+    private val switches = AtomicInteger(0)
+    private val rateLimitedCount = AtomicInteger(0)
     private val refills = AtomicInteger(0)
 
-    /** Finds working proxies. Blocks only for the first load. Returns how many are ready. */
+    /** Scans until [SCAN_TARGET] proxies work (or time runs out) and picks the fastest. */
     fun load(): Int {
         val fetched = fetchProxies().shuffled()
         if (fetched.isEmpty()) return 0
@@ -52,55 +57,56 @@ class ProxyManager(
             candidates.clear()
             candidates.addAll(fetched)
             active.clear()
-            strikes.clear()
-            index = 0
+            backup.clear()
         }
 
-        println("LokaleNow: Finding $topCount working proxies...")
-        val tested = findWorking(MAX_TEST_TIME_SEC, THREADS)
-        val count = synchronized(this) { active.size }
-        println("LokaleNow: Using $count proxies (tested $tested of ${fetched.size})")
+        println("LokaleNow: Scanning proxies...")
+        val found = mutableListOf<Entry>()
+        val tested = findWorking(SCAN_TARGET, MAX_TEST_TIME_SEC, THREADS) { entry ->
+            synchronized(found) { found.add(entry) }
+        }
+        val sorted = synchronized(found) { found.sortedBy { it.latencyMs } }
+
+        val count = synchronized(this) {
+            active.addAll(sorted.take(topCount))
+            backup.addAll(sorted.drop(topCount))
+            active.size
+        }
+        println("LokaleNow: Using $count proxies, ${sorted.size - count} in backup (tested $tested of ${fetched.size})")
         return count
     }
 
-    /** Next proxy in rotation, or null if none are left. */
+    /** The proxy to use now (the fastest active one), or null if none are left. */
     @Synchronized
-    fun next(): Proxy? {
-        if (active.isEmpty()) return null
-        if (index >= active.size) index = 0
-        return active[index++]
-    }
+    fun current(): Proxy? = active.firstOrNull()?.proxy
 
     @Synchronized
     fun hasProxies(): Boolean = active.isNotEmpty()
 
     fun markSuccess(proxy: Proxy) {
-        synchronized(this) { strikes.remove(proxy) }
         viaProxy.incrementAndGet()
     }
 
-    /** Records a failure. Returns true if the proxy was dropped (after [MAX_STRIKES] failures in a row). */
-    fun markFailed(proxy: Proxy): Boolean {
-        val removed = synchronized(this) {
-            val count = (strikes[proxy] ?: 0) + 1
-            if (count < MAX_STRIKES) {
-                strikes[proxy] = count
-                false
-            } else {
-                strikes.remove(proxy)
-                val i = active.indexOf(proxy)
-                if (i >= 0) {
-                    active.removeAt(i)
-                    if (i < index) index--
-                }
-                true
+    /**
+     * Removes the failed proxy and fills its place from backup.
+     * Rate-limited proxies go to the end of backup, since they usually recover.
+     */
+    fun markFailed(proxy: Proxy, rateLimited: Boolean) {
+        val needRefill = synchronized(this) {
+            val i = active.indexOfFirst { it.proxy == proxy }
+            if (i >= 0) {
+                active.removeAt(i)
+                if (rateLimited) backup.add(Entry(proxy, Long.MAX_VALUE))
             }
+            while (active.size < topCount) {
+                val next = backup.removeFirstOrNull() ?: break
+                insertSorted(active, next)
+            }
+            backup.isEmpty() && candidates.isNotEmpty()
         }
-        if (removed) {
-            dropped.incrementAndGet()
-            refillIfLow()
-        }
-        return removed
+        switches.incrementAndGet()
+        if (rateLimited) rateLimitedCount.incrementAndGet()
+        if (needRefill) refillInBackground()
     }
 
     /** Stops any background testing. Call when the build is done. */
@@ -109,21 +115,22 @@ class ProxyManager(
     }
 
     fun summary(): String {
-        val left = synchronized(this) { active.size }
+        val (left, spare) = synchronized(this) { active.size to backup.size }
         return "LokaleNow: Proxies: ${viaProxy.get()} translated via proxy, " +
-                "${dropped.get()} dropped, ${refills.get()} refills, $left active"
+                "${switches.get()} switches (${rateLimitedCount.get()} rate-limited), " +
+                "${refills.get()} refills, $left active, $spare backup"
     }
 
-    private fun refillIfLow() {
-        val low = synchronized(this) {
-            active.size < (topCount / 2).coerceAtLeast(1) && candidates.isNotEmpty()
-        }
-        if (!low || closed || !refilling.compareAndSet(false, true)) return
-
+    private fun refillInBackground() {
+        if (closed || !refilling.compareAndSet(false, true)) return
         refills.incrementAndGet()
         Thread {
             try {
-                findWorking(REFILL_TIME_SEC, REFILL_THREADS)
+                findWorking(REFILL_TARGET, REFILL_TIME_SEC, REFILL_THREADS) { entry ->
+                    synchronized(this@ProxyManager) {
+                        if (active.size < topCount) insertSorted(active, entry) else insertSorted(backup, entry)
+                    }
+                }
             } finally {
                 refilling.set(false)
             }
@@ -133,12 +140,17 @@ class ProxyManager(
         }.start()
     }
 
-    /** Tests candidates in parallel until the list is full, time runs out, or candidates run out. */
-    private fun findWorking(timeLimitSec: Long, threads: Int): Int {
+    /** Tests candidates in parallel until [target] pass, time runs out, or candidates run out. */
+    private fun findWorking(
+        target: Int,
+        timeLimitSec: Long,
+        threads: Int,
+        onFound: (Entry) -> Unit
+    ): Int {
         val tested = AtomicInteger(0)
+        val found = AtomicInteger(0)
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeLimitSec)
-        fun keepGoing(): Boolean =
-            !closed && System.nanoTime() < deadline && synchronized(this) { active.size < topCount }
+        fun keepGoing(): Boolean = !closed && System.nanoTime() < deadline && found.get() < target
 
         val pool = Executors.newFixedThreadPool(threads, DAEMON_THREADS)
         repeat(threads) {
@@ -146,7 +158,8 @@ class ProxyManager(
                 while (keepGoing()) {
                     val item = nextCandidate() ?: break
                     tested.incrementAndGet()
-                    if (testProxy(item)) addActive(item.toProxy())
+                    val ms = testProxy(item) ?: continue
+                    if (found.incrementAndGet() <= target) onFound(Entry(item.toProxy(), ms))
                 }
             }
         }
@@ -158,13 +171,13 @@ class ProxyManager(
         return tested.get()
     }
 
-    @Synchronized
-    private fun nextCandidate(): ProxyItem? = candidates.removeFirstOrNull()
+    private fun insertSorted(list: MutableList<Entry>, entry: Entry) {
+        val i = list.indexOfFirst { it.latencyMs > entry.latencyMs }
+        if (i < 0) list.add(entry) else list.add(i, entry)
+    }
 
     @Synchronized
-    private fun addActive(proxy: Proxy) {
-        if (active.size < topCount && proxy !in active) active.add(proxy)
-    }
+    private fun nextCandidate(): ProxyItem? = candidates.removeFirstOrNull()
 
     private fun fetchProxies(): List<ProxyItem> {
         val all = LinkedHashSet<ProxyItem>()
@@ -203,8 +216,8 @@ class ProxyManager(
         return all.toList()
     }
 
-    /** Sends a real translate request through the proxy. True if it returned a valid translation. */
-    private fun testProxy(item: ProxyItem): Boolean {
+    /** Sends a real translate request through the proxy. Returns latency in ms if it worked. */
+    private fun testProxy(item: ProxyItem): Long? {
         val client = baseClient.newBuilder()
             .proxy(item.toProxy())
             .connectTimeout(CONNECT_TIMEOUT_SEC, TimeUnit.SECONDS)
@@ -215,12 +228,17 @@ class ProxyManager(
         val request = Request.Builder().url(TEST_URL).build()
 
         return try {
+            val start = System.nanoTime()
             client.newCall(request).execute().use { response ->
                 val body = response.body?.string()
-                response.isSuccessful && body != null && isValidTranslation(body)
+                if (response.isSuccessful && body != null && isValidTranslation(body)) {
+                    (System.nanoTime() - start) / 1_000_000
+                } else {
+                    null
+                }
             }
         } catch (e: Exception) {
-            false
+            null
         }
     }
 
@@ -261,7 +279,8 @@ class ProxyManager(
     companion object {
         private const val TOP_COUNT = 10
         const val MAX_COUNT = 20
-        private const val MAX_STRIKES = 2
+        private const val SCAN_TARGET = 100
+        private const val REFILL_TARGET = 30
 
         private const val THREADS = 200
         private const val REFILL_THREADS = 50
