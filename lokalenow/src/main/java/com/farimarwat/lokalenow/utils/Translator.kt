@@ -26,6 +26,18 @@ class Translator private constructor(builder: Builder) {
 
     fun translate(lang: String): List<LNode> {
         val translatedNodes = mutableListOf<LNode>()
+        var totalItems = 0
+        for (node in nodes) {
+            if (!node.translatable) continue
+            totalItems += when (node.type) {
+                NodeType.STRING -> 1
+                NodeType.PLURALS -> node.pluralItems.size
+                NodeType.STRING_ARRAY -> node.arrayItems.size
+            }
+        }
+
+        var done = 0
+
         for (node in nodes) {
             if (!node.translatable) {
                 translatedNodes.add(node)
@@ -34,37 +46,41 @@ class Translator private constructor(builder: Builder) {
 
             when (node.type) {
                 NodeType.STRING -> {
+                    done++
+                    System.out.print("\r  [${ (done * 100) / totalItems }%] Translating for: $lang    ")
+                    System.out.flush()
                     val translatedValue = if (node.isCData) {
                         NetworkHelper.getTranslationRaw(lang, node.value)
                     } else {
                         NetworkHelper.getTranslation(lang, node.value)
                     }
-                    translatedNodes.add(
-                        node.copy(value = translatedValue ?: node.value)
-                    )
+                    translatedNodes.add(node.copy(value = translatedValue ?: node.value))
                 }
                 NodeType.PLURALS -> {
                     val translatedItems = linkedMapOf<String, String>()
                     for ((quantity, value) in node.pluralItems) {
-                        val translated = NetworkHelper.getTranslation(lang, value)
-                        translatedItems[quantity] = translated ?: value
+                        done++
+                        System.out.print("\r  [${ (done * 100) / totalItems }%] Translating for: $lang    ")
+                        System.out.flush()
+                        val result = NetworkHelper.getTranslation(lang, value)
+                        translatedItems[quantity] = result ?: value
                     }
-                    translatedNodes.add(
-                        node.copy(pluralItems = translatedItems)
-                    )
+                    translatedNodes.add(node.copy(pluralItems = translatedItems))
                 }
                 NodeType.STRING_ARRAY -> {
                     val translatedItems = mutableListOf<String>()
                     for (value in node.arrayItems) {
-                        val translated = NetworkHelper.getTranslation(lang, value)
-                        translatedItems.add(translated ?: value)
+                        done++
+                        System.out.print("\r  [${ (done * 100) / totalItems }%] Translating for: $lang    ")
+                        System.out.flush()
+                        val result = NetworkHelper.getTranslation(lang, value)
+                        translatedItems.add(result ?: value)
                     }
-                    translatedNodes.add(
-                        node.copy(arrayItems = translatedItems)
-                    )
+                    translatedNodes.add(node.copy(arrayItems = translatedItems))
                 }
             }
         }
+        System.out.println()
         return translatedNodes
     }
 }

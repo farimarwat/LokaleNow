@@ -1,5 +1,6 @@
 package com.farimarwat.lokalenow.plugin
 
+import com.farimarwat.lokalenow.models.NodeType
 import com.farimarwat.lokalenow.models.PrimaryStringDocument
 import com.farimarwat.lokalenow.utils.Translator
 import org.gradle.api.DefaultTask
@@ -59,7 +60,6 @@ abstract class LokaleNowTask : DefaultTask() {
                     allNodes
                 }
 
-                println("  Translating ${File(path).name} for: $lang")
                 val translator = Translator.Builder()
                     .addNodes(nodesToTranslate)
                     .build()
