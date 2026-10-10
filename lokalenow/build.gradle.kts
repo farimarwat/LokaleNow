@@ -10,7 +10,7 @@ kotlin {
 }
 
 extra["PUBLISH_GROUP_ID"] = "io.github.farimarwat"
-extra["PUBLISH_VERSION"] = "1.14"
+extra["PUBLISH_VERSION"] = "1.15"
 extra["PUBLISH_ARTIFACT_ID"] = "lokalenow"
 extra["PUBLISH_DESCRIPTION"] = "An android gradle plugin for localization"
 extra["PUBLISH_URL"] = "https://github.com/farimarwat/LokaleNow"
