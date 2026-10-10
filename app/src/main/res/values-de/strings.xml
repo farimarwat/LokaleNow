@@ -1,29 +1,35 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">Gebietsschema jetzt</string>
-  <string name="title">Test -App</string>
-  <string name="description">Einführung von LocalEnow Ein leistungsstarkes und benutzerfreundliches Plugin, das Ihren Lokalisierungsprozess mühelos optimieren soll. Verwalten und implementieren Sie mit LocalEnow mehrsprachige Inhalte in Ihren Anwendungen, Websites oder Softwareprojekten. Dieses Plugin bietet ein nahtloses Integrationserlebnis, mit dem Sie Ihre lokalisierten Inhalte mit Effizienz testen und optimieren können. Verabschieden Sie sich von Sprachbarrieren und Hallo zu einer reibungsloseren, zugänglicheren Benutzererfahrung mit LocalEnow.</string>
-  <string name="next">Was als nächstes?</string>
-  <string name="previous">Vorher =</string>
-  <string name="login">Login und genießen Sie</string>
-  <string name="welcome_message">Willkommen jetzt im Gebietsschema!</string>
-  <string name="error_message">Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.</string>
-  <string name="success_message">Ihre Änderungen wurden erfolgreich gespeichert.</string>
-  <string name="loading">Laden...</string>
-  <string name="confirm_exit">Sind Sie sicher, dass Sie beenden möchten?</string>
-  <string name="yes">Ja</string>
-  <string name="no">NEIN</string>
-  <string name="retry">Wiederholen</string>
-  <string name="submit">Einreichen</string>
-  <string name="cancel">Stornieren</string>
-  <string name="language_selection">Wählen Sie Ihre bevorzugte Sprache aus</string>
-  <string name="date_format">yjyy-mm-dd</string>
-  <string name="time_format">HH: MM: SS</string>
-  <string name="contact_us">Kontaktieren Sie uns</string>
-  <string name="about_us">Über uns</string>
-  <string name="quote_example">Er sagte:  &amp;quot;Lokalisierung ist wichtig! &amp;quot;</string>
-  <string name="apostrophe_example">Es ist ein großartiger Tag zum Testen!</string>
-  <string name="comma_example">Tests, Debuggen und Problemen mit Problemen.</string>
-  <string name="ampersand_example">Das und das sind verschiedene Dinge.</string>
-  <string name="mix_example"> &amp;quot;Hallo, es ist ein Test! &amp;quot;, Sagte sie.</string>
+    <string name="app_name">Jetzt lokalisieren</string>
+    <string name="title">„App“ testen</string>
+    <string name="description">Wir stellen Ihnen Localenow vor, ein leistungsstarkes und benutzerfreundliches Plugin, mit dem Sie Ihren Lokalisierungsprozess mühelos optimieren können. Mit Localenow können Sie mehrsprachige Inhalte einfach in Ihren Anwendungen, Websites oder Softwareprojekten verwalten und implementieren. Dieses Plugin bietet eine nahtlose Integrationserfahrung, sodass Sie Ihre lokalisierten Inhalte effizient testen und optimieren können. Verabschieden Sie sich von Sprachbarrieren und begrüßen Sie eine reibungslosere, zugänglichere Benutzererfahrung mit Localenow.</string>
+    <string name="next">Wie geht es weiter?</string>
+    <string name="previous">Vorherige =</string>
+    <string name="login">Einloggen und genießen</string>
+    <string name="quote_example">Er sagte: „Lokalisierung ist wichtig!“</string>
+    <string name="apostrophe_example">Es ist ein toller Tag zum Testen!</string>
+    <string name="ampersand_example">Dies und das sind verschiedene Dinge.</string>
+    <string name="cdata_example"><![CDATA[<b>Fett</b> und <i>kursiver</i> Text mit <a href="https://example.com">Link</a>]]></string>
+    <string name="date_format">yyyy-MM-dd</string>
+    <string name="time_format">HH:mm:ss</string>
+    <plurals name="songs_found">
+        <item quantity="one">%d Lied gefunden.</item>
+        <item quantity="other">%d Songs gefunden.</item>
+    </plurals>
+    <plurals name="items_in_cart">
+        <item quantity="zero">Ihr Warenkorb ist leer.</item>
+        <item quantity="one">%d Artikel in Ihrem Warenkorb.</item>
+        <item quantity="other">%d Artikel in Ihrem Warenkorb.</item>
+    </plurals>
+    <string-array name="planets">
+        <item>Quecksilber</item>
+        <item>Venus</item>
+        <item>Erde</item>
+        <item>Mars</item>
+    </string-array>
+    <string-array name="colors">
+        <item>Rot</item>
+        <item>Grün</item>
+        <item>Blau</item>
+    </string-array>
 </resources>

@@ -6,27 +6,41 @@
     <string name="previous">Previous =</string>
     <string name="login">Login &amp; Enjoy</string>
 
-    <!-- Additional test entries with special characters -->
-    <string name="welcome_message">Welcome to Locale Now!</string>
-    <string name="error_message">An unexpected error occurred. Please try again.</string>
-    <string name="success_message">Your changes have been saved successfully.</string>
-    <string name="loading">Loading...</string>
-    <string name="confirm_exit">Are you sure you want to exit?</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
-    <string name="retry">Retry</string>
-    <string name="submit">Submit</string>
-    <string name="cancel">Cancel</string>
-    <string name="language_selection">Select your preferred language</string>
-    <string name="date_format">yyyy-MM-dd</string>
-    <string name="time_format">HH:mm:ss</string>
-    <string name="contact_us">Contact Us</string>
-    <string name="about_us">About Us</string>
-
-    <!-- Special characters test cases -->
+    <!-- Special characters -->
     <string name="quote_example">He said, &quot;Localization is important!&quot;</string>
     <string name="apostrophe_example">It\'s a great day for testing!</string>
-    <string name="comma_example">Testing, debugging, &amp; fixing issues.</string>
     <string name="ampersand_example">This &amp; that are different things.</string>
-    <string name="mix_example">"Hello, it's a test!", she said.</string>
+
+    <!-- CDATA test -->
+    <string name="cdata_example"><![CDATA[<b>Bold</b> and <i>italic</i> text with <a href="https://example.com">link</a>]]></string>
+
+    <!-- Non-translatable -->
+    <string name="date_format" translatable="false">yyyy-MM-dd</string>
+    <string name="time_format" translatable="false">HH:mm:ss</string>
+
+    <!-- Plurals test -->
+    <plurals name="songs_found">
+        <item quantity="one">%d song found.</item>
+        <item quantity="other">%d songs found.</item>
+    </plurals>
+
+    <plurals name="items_in_cart">
+        <item quantity="zero">Your cart is empty.</item>
+        <item quantity="one">%d item in your cart.</item>
+        <item quantity="other">%d items in your cart.</item>
+    </plurals>
+
+    <!-- String array test -->
+    <string-array name="planets">
+        <item>Mercury</item>
+        <item>Venus</item>
+        <item>Earth</item>
+        <item>Mars</item>
+    </string-array>
+
+    <string-array name="colors">
+        <item>Red</item>
+        <item>Green</item>
+        <item>Blue</item>
+    </string-array>
 </resources>

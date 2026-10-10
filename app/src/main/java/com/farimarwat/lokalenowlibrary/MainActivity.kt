@@ -1,8 +1,10 @@
 package com.farimarwat.lokalenowlibrary
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +21,25 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.farimarwat.lokalenowlibrary.ui.theme.LokaleNowLibraryTheme
 import com.farimarwat.lokalenowlibrary.R
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import java.io.File
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,45 +57,154 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
 @Composable
-fun Main(){
+fun Main() {
+    val context = LocalContext.current
+    val resources = context.resources
+    var showLangDialog by remember { mutableStateOf(false) }
+    var currentLocale by remember { mutableStateOf(Locale.getDefault().language) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
     ) {
-        Text(
-            text = stringResource(id = R.string.title),
-            textAlign = TextAlign.Center,
-            fontSize = 24.sp
-        )
-        Text(
-            text = stringResource(id = R.string.description),
-            textAlign = TextAlign.Center,
-            fontSize = 18.sp
-        )
+        // Language switcher
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Button(
-                modifier = Modifier
-                    .weight(1f),
-                onClick = { /*TODO*/ }) {
+            Text(text = "Language: $currentLocale", fontSize = 18.sp)
+            Button(onClick = { showLangDialog = true }) {
+                Text(text = "Change")
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Basic strings
+        Text(text = "--- Basic Strings ---", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(id = R.string.title))
+        Text(text = stringResource(id = R.string.description))
+        Text(text = stringResource(id = R.string.login))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Special characters
+        Text(text = "--- Special Characters ---", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(id = R.string.quote_example))
+        Text(text = stringResource(id = R.string.apostrophe_example))
+        Text(text = stringResource(id = R.string.ampersand_example))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // CDATA
+        Text(text = "--- CDATA ---", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(id = R.string.cdata_example))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Plurals
+        Text(text = "--- Plurals ---", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(text = resources.getQuantityString(R.plurals.songs_found, 1, 1))
+        Text(text = resources.getQuantityString(R.plurals.songs_found, 5, 5))
+        Text(text = resources.getQuantityString(R.plurals.items_in_cart, 0, 0))
+        Text(text = resources.getQuantityString(R.plurals.items_in_cart, 1, 1))
+        Text(text = resources.getQuantityString(R.plurals.items_in_cart, 3, 3))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // String array
+        Text(text = "--- String Arrays ---", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        val planets = resources.getStringArray(R.array.planets)
+        Text(text = "Planets: ${planets.joinToString(", ")}")
+        val colors = resources.getStringArray(R.array.colors)
+        Text(text = "Colors: ${colors.joinToString(", ")}")
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Buttons
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Button(modifier = Modifier.weight(1f), onClick = {}) {
                 Text(text = stringResource(id = R.string.previous))
             }
-            Button(
-                modifier = Modifier
-                    .weight(1f),
-                onClick = { /*TODO*/ }) {
+            Button(modifier = Modifier.weight(1f), onClick = {}) {
                 Text(text = stringResource(id = R.string.next))
             }
         }
-        Button(
-            modifier = Modifier
-                .fillMaxWidth(),
-            onClick = { /*TODO*/ }) {
-            Text(text = stringResource(id = R.string.login))
+    }
+
+    if (showLangDialog) {
+        val availableLocales = getAvailableLocales(context)
+        AlertDialog(
+            onDismissRequest = { showLangDialog = false },
+            title = { Text(text = "Select Language") },
+            text = {
+                LazyColumn {
+                    items(availableLocales) { locale ->
+                        TextButton(
+                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                showLangDialog = false
+                                currentLocale = locale.language
+                                setAppLocale(context, locale)
+                            }
+                        ) {
+                            Text(
+                                text = "${locale.displayLanguage} (${locale.language})",
+                                modifier = Modifier.fillMaxWidth(),
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLangDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
+
+fun getAvailableLocales(context: Context): List<Locale> {
+    val locales = mutableListOf<Locale>()
+    locales.add(Locale("en")) // default
+
+    val resDir = File(context.applicationInfo.sourceDir).parentFile
+    // Use AssetManager trick to detect available locales
+    val config = context.resources.configuration
+    val allLocales = Locale.getAvailableLocales()
+
+    for (locale in allLocales) {
+        val testConfig = android.content.res.Configuration(config)
+        testConfig.setLocale(locale)
+        val testResources = context.createConfigurationContext(testConfig).resources
+        // Check if this locale has its own strings.xml by comparing app_name
+        val localizedAppName = testResources.getString(R.string.login)
+        val defaultConfig = android.content.res.Configuration(config)
+        defaultConfig.setLocale(Locale("en"))
+        val defaultResources = context.createConfigurationContext(defaultConfig).resources
+        val defaultAppName = defaultResources.getString(R.string.login)
+
+        if (localizedAppName != defaultAppName && !locales.any { it.language == locale.language }) {
+            locales.add(locale)
         }
+    }
+    return locales.sortedBy { it.displayLanguage }
+}
+
+fun setAppLocale(context: Context, locale: Locale) {
+    Locale.setDefault(locale)
+    val config = android.content.res.Configuration(context.resources.configuration)
+    config.setLocale(locale)
+    context.resources.updateConfiguration(config, context.resources.displayMetrics)
+
+    // Restart activity to apply
+    if (context is ComponentActivity) {
+        context.recreate()
     }
 }

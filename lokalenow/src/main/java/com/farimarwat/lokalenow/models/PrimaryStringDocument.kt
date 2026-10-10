@@ -12,39 +12,17 @@ import javax.xml.transform.OutputKeys
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
-
-/**
- * A class that provides functionality for handling XML documents related to localization,
- * specifically managing strings.xml files, hash calculations for modification detection,
- * and saving localized versions of XML files.
- *
- * @property mProjDir The project directory containing the XML files.
- * @property mStringsFile The localized strings.xml file.
- * @property mOriginalXmlFile The original strings.xml file.
- * @property mDocument The XML document object created from the strings.xml file.
- * @property mInputStream Input stream, not currently used in the class.
- */
 class PrimaryStringDocument private constructor(builder: Builder) {
     private val mProjDir: File
     private val mStringsFile: File
     private val mDocument: Document?
     private val mInputStream: InputStream?
-    private var mAllNodes:List<LNode>? = null
-    private val mNodeHashes:Map<String,Int>
-    private val mModifiedNodes:List<LNode>
-    private var mNodesToDelete:List<String>? = null
+    private var mAllNodes: List<LNode>? = null
+    private val mNodeHashes: Map<String, Int>
+    private val mModifiedNodes: List<LNode>
+    private var mNodesToDelete: List<String>? = null
 
-    /**
-     * Builder pattern for constructing an [PrimaryStringDocument] instance.
-     *
-     * @property projDir The project directory containing the XML files.
-     */
     class Builder(val projDir: File) {
-        /**
-         * Builds and returns an instance of [PrimaryStringDocument].
-         *
-         * @return The created [PrimaryStringDocument] instance.
-         */
         fun build(): PrimaryStringDocument = PrimaryStringDocument(this)
     }
 
@@ -69,42 +47,119 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         mInputStream = null
     }
 
-    /**
-     * Lists all elements in the XML document, converting them into [LNode] objects.
-     * The elements include attributes like `name`, `value`, and `translatable`.
-     *
-     * @return A list of [LNode] objects representing the XML elements.
-     */
     private fun loadStringXmlNodes(): List<LNode> {
         val list = mutableListOf<LNode>()
         try {
             mDocument?.let { doc ->
                 val nodes = doc.documentElement.childNodes
-                list.addAll((0 until nodes.length)
-                    .mapNotNull { nodes.item(it) as? Element }
-                    .map {
-                        val name = it.getAttribute("name")
-                        val value = it.textContent
-                        val translatable = if (it.hasAttribute("translatable")) {
-                            val translatableAtr = it.getAttributeNode("translatable")
-                            translatableAtr.value.toBoolean()
-                        } else {
-                            true
-                        }
-                        LNode(name, value, translatable)
+                for (i in 0 until nodes.length) {
+                    val node = nodes.item(i) as? Element ?: continue
+                    val name = node.getAttribute("name")
+                    val translatable = if (node.hasAttribute("translatable")) {
+                        node.getAttribute("translatable").toBoolean()
+                    } else {
+                        true
                     }
-                )
+
+                    when (node.tagName) {
+                        "string" -> {
+                            val isCData = hasCDataChild(node)
+                            val value = if (isCData) getCDataContent(node) else getInnerXml(node)
+                            list.add(
+                                LNode(
+                                    name = name,
+                                    value = value,
+                                    translatable = translatable,
+                                    type = NodeType.STRING,
+                                    isCData = isCData
+                                )
+                            )
+                        }
+                        "plurals" -> {
+                            val items = linkedMapOf<String, String>()
+                            val children = node.childNodes
+                            for (j in 0 until children.length) {
+                                val child = children.item(j) as? Element ?: continue
+                                if (child.tagName == "item") {
+                                    val quantity = child.getAttribute("quantity")
+                                    val isCData = hasCDataChild(child)
+                                    val value = if (isCData) getCDataContent(child) else getInnerXml(child)
+                                    items[quantity] = value
+                                }
+                            }
+                            list.add(
+                                LNode(
+                                    name = name,
+                                    value = "",
+                                    translatable = translatable,
+                                    type = NodeType.PLURALS,
+                                    pluralItems = items
+                                )
+                            )
+                        }
+                        "string-array" -> {
+                            val items = mutableListOf<String>()
+                            val children = node.childNodes
+                            for (j in 0 until children.length) {
+                                val child = children.item(j) as? Element ?: continue
+                                if (child.tagName == "item") {
+                                    items.add(getInnerXml(child))
+                                }
+                            }
+                            list.add(
+                                LNode(
+                                    name = name,
+                                    value = "",
+                                    translatable = translatable,
+                                    type = NodeType.STRING_ARRAY,
+                                    arrayItems = items
+                                )
+                            )
+                        }
+                    }
+                }
             }
         } catch (ex: Exception) {
             println("Error listing elements: $ex")
         }
         return list
     }
-    fun getAllNodes():List<LNode>?{
-        return mAllNodes
+
+    private fun hasCDataChild(element: Element): Boolean {
+        val children = element.childNodes
+        for (i in 0 until children.length) {
+            if (children.item(i).nodeType == Node.CDATA_SECTION_NODE) return true
+        }
+        return false
     }
-    fun getModifiedNodes():List<LNode>?{
-        return if(mModifiedNodes.isNotEmpty()) mModifiedNodes else null
+
+    private fun getCDataContent(element: Element): String {
+        val children = element.childNodes
+        for (i in 0 until children.length) {
+            val child = children.item(i)
+            if (child.nodeType == Node.CDATA_SECTION_NODE) return child.nodeValue
+        }
+        return element.textContent
+    }
+
+    private fun getInnerXml(element: Element): String {
+        val transformer = TransformerFactory.newInstance().newTransformer()
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes")
+        val sb = StringBuilder()
+        val children = element.childNodes
+        for (i in 0 until children.length) {
+            val child = children.item(i)
+            val writer = java.io.StringWriter()
+            transformer.transform(DOMSource(child), StreamResult(writer))
+            sb.append(writer.toString())
+        }
+        return sb.toString()
+    }
+
+    fun getAllNodes(): List<LNode>? = mAllNodes
+
+    fun getModifiedNodes(): List<LNode>? {
+        return if (mModifiedNodes.isNotEmpty()) mModifiedNodes else null
     }
 
     private fun loadNodeHashes(): Map<String, Int> {
@@ -125,12 +180,17 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         return map
     }
 
-    private fun listModifiedNodes():List<LNode>{
+    private fun listModifiedNodes(): List<LNode> {
         val list = mutableListOf<LNode>()
-        mAllNodes?.let{ allNodes ->
-            for(item in allNodes){
+        mAllNodes?.let { allNodes ->
+            for (item in allNodes) {
                 val hash = mNodeHashes[item.name]
-                if(hash != item.value.hashCode()){
+                val currentHash = when (item.type) {
+                    NodeType.STRING -> item.value.hashCode()
+                    NodeType.PLURALS -> item.pluralItems.hashCode()
+                    NodeType.STRING_ARRAY -> item.arrayItems.hashCode()
+                }
+                if (hash != currentHash) {
                     list.add(item)
                 }
             }
@@ -138,11 +198,11 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         return list
     }
 
-    private fun listDeletedNodes():List<String>? {
+    private fun listDeletedNodes(): List<String>? {
         val list = mutableListOf<String>()
         mAllNodes?.let { allNodes ->
-            for(item in mNodeHashes){
-                if(allNodes.find { it.name == item.key } == null){
+            for (item in mNodeHashes) {
+                if (allNodes.find { it.name == item.key } == null) {
                     list.add(item.key)
                 }
             }
@@ -151,26 +211,14 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         return null
     }
 
-    /**
-     * Determines whether the strings.xml file has been modified by comparing the current
-     * file hash with the stored hash.
-     *
-     * @return `true` if the file has been modified, otherwise `false`.
-     */
     fun isModified(): Boolean {
         val hashFile = getHashFile(STRINGS_XML_HASH_FILE_NAME)
         val currentHash = mStringsFile.calculateFileHash()
-        if (!hashFile.exists()) {
-            return true
-        }
-        val storedHash = hashFile.readText().trim() // Ensure any extra whitespace is removed
+        if (!hashFile.exists()) return true
+        val storedHash = hashFile.readText().trim()
         return storedHash != currentHash
     }
 
-
-    /**
-     * Saves the current hash of the strings.xml file to detect modifications later.
-     */
     fun saveHashes() {
         val hashFile = getHashFile(STRINGS_XML_HASH_FILE_NAME)
         val currentHash = mStringsFile.calculateFileHash()
@@ -181,7 +229,14 @@ class PrimaryStringDocument private constructor(builder: Builder) {
     private fun saveNodeHashes() {
         val nodeHashFile = getHashFile(NODES_HASH_FILE_NAME)
         val nodes = loadStringXmlNodes()
-        val content = nodes.joinToString("\n") { "${it.name}:${it.value.hashCode()}" }
+        val content = nodes.joinToString("\n") { node ->
+            val hash = when (node.type) {
+                NodeType.STRING -> node.value.hashCode()
+                NodeType.PLURALS -> node.pluralItems.hashCode()
+                NodeType.STRING_ARRAY -> node.arrayItems.hashCode()
+            }
+            "${node.name}:$hash"
+        }
         try {
             nodeHashFile.writeText(content)
         } catch (e: Exception) {
@@ -189,114 +244,73 @@ class PrimaryStringDocument private constructor(builder: Builder) {
         }
     }
 
-
-    /**
-     * Returns the file used to store the hash of the strings.xml file.
-     *
-     * @return The hash file.
-     */
-    private fun getHashFile(hashFileName:String): File {
+    private fun getHashFile(hashFileName: String): File {
         val hashDir = getHashDirectory()
         return File(hashDir, hashFileName)
     }
 
-    /**
-     * Returns the directory used for storing hash files.
-     *
-     * @return The hash directory.
-     */
     private fun getHashDirectory(): File {
         val buildDir = File(mProjDir, "build")
         buildDir.mkdirs()
-
         val hashDir = File(buildDir, "hashes")
         hashDir.mkdirs()
         return hashDir
     }
 
-    /**
-     * Saves the localized version of the XML file with translated string values.
-     *
-     * @param lang The language code for the localization (e.g., "en", "fr").
-     * @param translatedNodes A list of translated [LNode] objects.
-     */
     fun saveLocalized(lang: String, translatedNodes: List<LNode>) {
         val localizedValuesDir = File(
             mProjDir,
             "src${File.separator}main${File.separator}res${File.separator}values-$lang"
         )
         localizedValuesDir.mkdirs()
-
         val translatedXmlFile = File(localizedValuesDir, STRINGS_XML_FILE_NAME)
         saveXmlFile(translatedNodes, translatedXmlFile)
     }
 
-    /**
-     * Saves the XML file with the specified list of nodes to the provided output file.
-     *
-     * @param nodes The list of [LNode] objects to save.
-     * @param outputFile The output file to save the XML content to.
-     */
     private fun saveXmlFile(nodes: List<LNode>, outputFile: File) {
-        val docFactory = DocumentBuilderFactory.newInstance()
-        val docBuilder = docFactory.newDocumentBuilder()
-        val doc: Document
-        val rootElement: Element
-
-        if (outputFile.exists() && outputFile.length() > 0) {
-            doc = docBuilder.parse(outputFile)
-            rootElement = doc.documentElement
-            doc.normalizeDocument()
-        } else {
-            doc = docBuilder.newDocument()
-            rootElement = doc.createElement("resources")
-            doc.appendChild(rootElement)
-        }
-        removeWhitespaceNodes(rootElement)
-        val nodeList = rootElement.getElementsByTagName("string")
-        val nodesToRemove = mutableListOf<Node>()
-
-        for (i in 0 until nodeList.length) {
-            val element = nodeList.item(i) as Element
-            if (mNodesToDelete?.contains(element.getAttribute("name")) == true) {
-                nodesToRemove.add(element)
-            }
-        }
-        for (node in nodesToRemove) {
-            rootElement.removeChild(node)
-        }
-
-        val existingNodes = mutableSetOf<String>()
-        for (i in 0 until rootElement.getElementsByTagName("string").length) {
-            val element = rootElement.getElementsByTagName("string").item(i) as Element
-            existingNodes.add(element.getAttribute("name"))
-        }
+        val sb = StringBuilder()
+        sb.appendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+        sb.appendLine("<resources>")
 
         for (node in nodes) {
-            if (!existingNodes.contains(node.name)) {
-                val element = doc.createElement("string")
-                element.setAttribute("name", node.name)
-                element.textContent = node.value
-                rootElement.appendChild(element)
+            when (node.type) {
+                NodeType.STRING -> {
+                    val value = if (node.isCData) {
+                        "<![CDATA[${node.value}]]>"
+                    } else {
+                        node.value
+                    }
+                    sb.appendLine("    <string name=\"${node.name}\">$value</string>")
+                }
+                NodeType.PLURALS -> {
+                    sb.appendLine("    <plurals name=\"${node.name}\">")
+                    for ((quantity, value) in node.pluralItems) {
+                        sb.appendLine("        <item quantity=\"$quantity\">$value</item>")
+                    }
+                    sb.appendLine("    </plurals>")
+                }
+                NodeType.STRING_ARRAY -> {
+                    sb.appendLine("    <string-array name=\"${node.name}\">")
+                    for (value in node.arrayItems) {
+                        sb.appendLine("        <item>$value</item>")
+                    }
+                    sb.appendLine("    </string-array>")
+                }
             }
         }
 
-        val transformer = TransformerFactory.newInstance().newTransformer()
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes")
-        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2")
-        val source = DOMSource(doc)
-        val result = StreamResult(outputFile)
-        transformer.transform(source, result)
+        sb.appendLine("</resources>")
+        outputFile.writeText(sb.toString())
     }
-    // Function to remove all blank text nodes (whitespace-only)
+
     private fun removeWhitespaceNodes(node: Node) {
         val children = node.childNodes
-        for (i in children.length - 1 downTo 0) { // Iterate in reverse to avoid skipping nodes
+        for (i in children.length - 1 downTo 0) {
             val child = children.item(i)
             if (child.nodeType == Node.TEXT_NODE && child.textContent.trim().isEmpty()) {
                 node.removeChild(child)
             } else if (child.nodeType == Node.ELEMENT_NODE) {
-                removeWhitespaceNodes(child) // Recursively clean child elements
+                removeWhitespaceNodes(child)
             }
         }
     }

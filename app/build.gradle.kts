@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("io.github.farimarwat.lokalenow") version "1.6"
+    id("io.github.farimarwat.lokalenow") version "1.14"
 }
 
 android {
@@ -34,8 +34,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_19
     }
 
-    kotlinOptions {
-        jvmTarget = "19"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_19)
+        }
     }
 
     buildFeatures {

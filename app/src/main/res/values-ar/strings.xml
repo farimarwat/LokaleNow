@@ -1,29 +1,35 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">لغة الآن</string>
-  <string name="title">تطبيق اختبار</string>
-  <string name="description">تقديم مكون إضافي قوي وسهل الاستخدام مصمم لتبسيط عملية التعريب دون عناء. مع LocalEnow ، إدارة المحتوى متعدد اللغات بسهولة داخل التطبيقات أو مواقع الويب أو مشاريع البرامج الخاصة بك. يوفر هذا البرنامج المساعد تجربة تكامل سلسة ، مما يتيح لك اختبار المحتوى المترجمة وتحسينه بكفاءة. قل وداعًا لحواجز اللغة ومرحبًا بتجربة مستخدم أكثر سلاسة وأكثر سهلة الوصول مع LocalEnow.</string>
-  <string name="next">ماذا بعد؟</string>
-  <string name="previous">السابق =</string>
-  <string name="login">تسجيل الدخول والتمتع</string>
-  <string name="welcome_message">مرحبًا بك في اللغة الآن!</string>
-  <string name="error_message">حدث خطأ غير متوقع. من فضلك حاول مرة أخرى.</string>
-  <string name="success_message">تم حفظ التغييرات الخاصة بك بنجاح.</string>
-  <string name="loading">تحميل...</string>
-  <string name="confirm_exit">هل أنت متأكد أنك تريد الخروج؟</string>
-  <string name="yes">نعم</string>
-  <string name="no">لا</string>
-  <string name="retry">إعادة المحاولة</string>
-  <string name="submit">يُقدِّم</string>
-  <string name="cancel">يلغي</string>
-  <string name="language_selection">حدد لغتك المفضلة</string>
-  <string name="date_format">yyyy-mm-dd</string>
-  <string name="time_format">HH: MM: SS</string>
-  <string name="contact_us">اتصل بنا</string>
-  <string name="about_us">معلومات عنا</string>
-  <string name="quote_example">قال ،  &amp;quot;التوطين مهم! &amp;quot;</string>
-  <string name="apostrophe_example">إنه يوم عظيم للاختبار!</string>
-  <string name="comma_example">الاختبار ، تصحيح الأخطاء ، وإصلاح القضايا.</string>
-  <string name="ampersand_example">هذا وهم أشياء مختلفة.</string>
-  <string name="mix_example"> &amp;quot;مرحبًا ، إنه اختبار! &amp;quot; ، قالت.</string>
+    <string name="app_name">لغة الآن</string>
+    <string name="title">اختبار "التطبيق"</string>
+    <string name="description">نقدم لك Localenow، وهو مكون إضافي قوي وسهل الاستخدام مصمم لتبسيط عملية الترجمة الخاصة بك دون عناء. باستخدام Localenow، يمكنك إدارة المحتوى متعدد اللغات وتنفيذه بسهولة داخل تطبيقاتك أو مواقع الويب أو مشاريعك البرمجية. يوفر هذا البرنامج المساعد تجربة تكامل سلسة، مما يسمح لك باختبار وتحسين المحتوى المترجم الخاص بك بكفاءة. قل وداعًا للحواجز اللغوية ومرحبًا بتجربة مستخدم أكثر سلاسة ويسهل الوصول إليها مع Localenow.</string>
+    <string name="next">ماذا بعد؟</string>
+    <string name="previous">السابق =</string>
+    <string name="login">تسجيل الدخول والتمتع به</string>
+    <string name="quote_example">قال: "التوطين مهم!"</string>
+    <string name="apostrophe_example">إنه يوم عظيم للاختبار!</string>
+    <string name="ampersand_example">هذا وذاك أمران مختلفان.</string>
+    <string name="cdata_example"><![CDATA[نص <b>غامق</b> و<i>مائل</i> مع <a href="https://example.com">رابط</a>]]></string>
+    <string name="date_format">yyyy-MM-dd</string>
+    <string name="time_format">HH:mm:ss</string>
+    <plurals name="songs_found">
+        <item quantity="one">تم العثور على %d أغنية.</item>
+        <item quantity="other">تم العثور على %d أغنية.</item>
+    </plurals>
+    <plurals name="items_in_cart">
+        <item quantity="zero">سلة التسوق الخاصة بك فارغة.</item>
+        <item quantity="one">%d عنصر في سلة التسوق الخاصة بك.</item>
+        <item quantity="other">%d من العناصر في سلة التسوق الخاصة بك.</item>
+    </plurals>
+    <string-array name="planets">
+        <item>الزئبق</item>
+        <item>فينوس</item>
+        <item>أرض</item>
+        <item>المريخ</item>
+    </string-array>
+    <string-array name="colors">
+        <item>أحمر</item>
+        <item>أخضر</item>
+        <item>أزرق</item>
+    </string-array>
 </resources>

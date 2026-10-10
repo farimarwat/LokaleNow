@@ -1,29 +1,35 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">Lokal sekarang</string>
-  <string name="title">Aplikasi pengujian</string>
-  <string name="description">Memperkenalkan LocalEnow plugin yang kuat dan ramah pengguna yang dirancang untuk merampingkan proses lokalisasi Anda dengan mudah. Dengan LocalEnow, dengan mudah mengelola dan mengimplementasikan konten multibahasa dalam aplikasi, situs web, atau proyek perangkat lunak Anda. Plugin ini menawarkan pengalaman integrasi yang mulus, memungkinkan Anda untuk menguji dan mengoptimalkan konten lokal Anda dengan efisiensi. Ucapkan selamat tinggal pada hambatan bahasa dan halo kepada pengalaman pengguna yang lebih halus dan lebih mudah diakses dengan LocalEnow.</string>
-  <string name="next">Apa selanjutnya?</string>
-  <string name="previous">Sebelumnya =</string>
-  <string name="login">Masuk &amp;amp; Nikmati</string>
-  <string name="welcome_message">Selamat datang di Locale sekarang!</string>
-  <string name="error_message">Terjadi kesalahan yang tidak terduga. Tolong coba lagi.</string>
-  <string name="success_message">Perubahan Anda telah disimpan dengan sukses.</string>
-  <string name="loading">Memuat...</string>
-  <string name="confirm_exit">Apakah Anda yakin ingin keluar?</string>
-  <string name="yes">Ya</string>
-  <string name="no">TIDAK</string>
-  <string name="retry">Mencoba kembali</string>
-  <string name="submit">Kirim</string>
-  <string name="cancel">Membatalkan</string>
-  <string name="language_selection">Pilih bahasa pilihan Anda</string>
-  <string name="date_format">yyyy-mm-dd</string>
-  <string name="time_format">HH: MM: SS</string>
-  <string name="contact_us">Hubungi kami</string>
-  <string name="about_us">Tentang kami</string>
-  <string name="quote_example">Dia berkata,  &amp;quot;Lokalisasi itu penting! &amp;quot;</string>
-  <string name="apostrophe_example">Ini hari yang menyenangkan untuk pengujian!</string>
-  <string name="comma_example">Pengujian, debugging, &amp;amp; memperbaiki masalah.</string>
-  <string name="ampersand_example">Ini &amp;amp; itu adalah hal yang berbeda.</string>
-  <string name="mix_example"> &amp;quot;Halo, ini ujian! &amp;quot;, Katanya.</string>
+    <string name="app_name">Lokal Sekarang</string>
+    <string name="title">Menguji "Aplikasi"</string>
+    <string name="description">Memperkenalkan Localenow, plugin yang kuat dan ramah pengguna yang dirancang untuk menyederhanakan proses pelokalan Anda dengan mudah. Dengan Localenow, kelola dan implementasikan konten multibahasa dengan mudah dalam aplikasi, situs web, atau proyek perangkat lunak Anda. Plugin ini menawarkan pengalaman integrasi yang lancar, memungkinkan Anda menguji dan mengoptimalkan konten lokal dengan efisien. Ucapkan selamat tinggal pada kendala bahasa &amp; sambut pengalaman pengguna yang lebih lancar dan mudah diakses dengan Localenow.</string>
+    <string name="next">Apa Selanjutnya?</string>
+    <string name="previous">Sebelumnya =</string>
+    <string name="login">Masuk &amp; Nikmati</string>
+    <string name="quote_example">Dia berkata, "Lokalisasi itu penting!"</string>
+    <string name="apostrophe_example">Ini hari yang menyenangkan untuk pengujian!</string>
+    <string name="ampersand_example">Ini &amp; itu adalah hal yang berbeda.</string>
+    <string name="cdata_example"><![CDATA[Teks <b>Tebal</b> dan <i>miring</i> dengan <a href="https://example.com">link</a>]]></string>
+    <string name="date_format">yyyy-MM-dd</string>
+    <string name="time_format">HH:mm:ss</string>
+    <plurals name="songs_found">
+        <item quantity="one">%d lagu ditemukan.</item>
+        <item quantity="other">%d lagu ditemukan.</item>
+    </plurals>
+    <plurals name="items_in_cart">
+        <item quantity="zero">Keranjang Anda kosong.</item>
+        <item quantity="one">%d item di keranjang Anda.</item>
+        <item quantity="other">%d item di keranjang Anda.</item>
+    </plurals>
+    <string-array name="planets">
+        <item>Air raksa</item>
+        <item>Venus</item>
+        <item>Bumi</item>
+        <item>Mars</item>
+    </string-array>
+    <string-array name="colors">
+        <item>Merah</item>
+        <item>Hijau</item>
+        <item>Biru</item>
+    </string-array>
 </resources>

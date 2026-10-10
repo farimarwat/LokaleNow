@@ -8,7 +8,7 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 
-abstract class LokaleNowTask: DefaultTask() {
+abstract class LokaleNowTask : DefaultTask() {
     @get:Input
     var languages = listOf<String>()
 
@@ -17,48 +17,52 @@ abstract class LokaleNowTask: DefaultTask() {
 
     @TaskAction
     fun doTranslate() {
-        if(!activate) return
-        val path = project.layout.projectDirectory.toString()
+        if (!activate) return
+
+        val rootProject = project.rootProject
+        val allProjects = rootProject.allprojects
+
+        for (proj in allProjects) {
+            val projPath = proj.layout.projectDirectory.toString()
+            val stringsFile = File(
+                projPath,
+                "src${File.separator}main${File.separator}res${File.separator}values${File.separator}strings.xml"
+            )
+            if (!stringsFile.exists()) continue
+
+            println("LokaleNow: Processing module -> ${proj.name}")
+            processModule(projPath)
+        }
+    }
+
+    private fun processModule(path: String) {
         val filePath = File(path)
         val ldoc = PrimaryStringDocument
             .Builder(filePath)
             .build()
 
-        // Clean up old languages (removes unused ones)
         cleanUpOldLanguages(path)
 
-        val existingFilesCount = countExistingLangDirs(path)
-        if(existingFilesCount != languages.count()){
-            val listString = ldoc.getAllNodes()
-            if(listString == null) return
-            val translator = Translator.Builder()
-                .addNodes(listString)
-                .build()
+        val allNodes = ldoc.getAllNodes() ?: return
 
-            // Process each language only if it's a new language or has not been processed yet
-            languages.forEach { lang ->
-                // Check if the translation already exists for this language
-                val langFolder = File(path, "src${File.separator}main${File.separator}res${File.separator}values-$lang")
-                val translatedXmlFile = File(langFolder, PrimaryStringDocument.STRINGS_XML_FILE_NAME)
-                if(!translatedXmlFile.exists()){
-                    println("Translating for: $lang")
-                    val translated = translator.translate(lang)
-                    ldoc.saveLocalized(lang, translated)
+        languages.forEach { lang ->
+            val langFolder = File(
+                path,
+                "src${File.separator}main${File.separator}res${File.separator}values-$lang"
+            )
+            val translatedXmlFile = File(langFolder, PrimaryStringDocument.STRINGS_XML_FILE_NAME)
+
+            if (!translatedXmlFile.exists() || ldoc.isModified()) {
+                val nodesToTranslate = if (translatedXmlFile.exists() && ldoc.getModifiedNodes() != null) {
+                    ldoc.getModifiedNodes()!!
+                } else {
+                    allNodes
                 }
-            }
-        }
 
-        // Check if the document is modified or if we need to update the languages
-        if (ldoc.isModified()) {
-            val listString = if(ldoc.getModifiedNodes() != null) ldoc.getModifiedNodes() else ldoc.getAllNodes()
-            if(listString == null) return
-            val translator = Translator.Builder()
-                .addNodes(listString)
-                .build()
-
-            // Process each language only if it's a new language or has not been processed yet
-            languages.forEach { lang ->
-                println("Translating for: $lang")
+                println("  Translating ${File(path).name} for: $lang")
+                val translator = Translator.Builder()
+                    .addNodes(nodesToTranslate)
+                    .build()
                 val translated = translator.translate(lang)
                 ldoc.saveLocalized(lang, translated)
             }
@@ -66,49 +70,35 @@ abstract class LokaleNowTask: DefaultTask() {
         ldoc.saveHashes()
     }
 
-
-    /**
-     * Cleans up old language folders that are no longer required.
-     */
     private fun cleanUpOldLanguages(projectPath: String) {
-        // Define the base directory where language folders are stored
         val resDir = File(projectPath, "src${File.separator}main${File.separator}res")
-
-        // Get the current list of language folders (e.g., values-ar, values-fr)
         val existingLangDirs = resDir.listFiles { file ->
             file.isDirectory && file.name.startsWith("values-")
         }?.map { it.name.substringAfter("values-") } ?: emptyList()
 
-        // Find out which languages need to be removed (those that are not in the new list)
         val languagesToRemove = existingLangDirs.filterNot { it in languages }
-        print("Languages To Remove: "+languagesToRemove+"\n")
 
-        // Remove unwanted language folders
         languagesToRemove.forEach { lang ->
             val langDir = File(resDir, "values-$lang")
             if (langDir.exists()) {
-                println("Removing directory for language: $lang")
+                println("  Removing directory for language: $lang")
                 deleteDirectory(langDir)
             }
         }
     }
-    fun countExistingLangDirs(projectPath: String): Int {
-        val resDir = File(projectPath, "src${File.separator}main${File.separator}res")
 
+    private fun countExistingLangDirs(projectPath: String): Int {
+        val resDir = File(projectPath, "src${File.separator}main${File.separator}res")
         val existingLangDirs = resDir.listFiles { file ->
             file.isDirectory && file.name.startsWith("values-")
         }?.map { it.name.substringAfter("values-") } ?: emptyList()
-
         return existingLangDirs.size
     }
 
-    /**
-     * Recursively deletes a directory and its contents.
-     */
     private fun deleteDirectory(directory: File) {
         if (directory.isDirectory) {
             directory.listFiles()?.forEach {
-                deleteDirectory(it) // Recursively delete files
+                deleteDirectory(it)
             }
         }
         directory.delete()
