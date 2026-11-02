@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 class Translator private constructor(builder: Builder) {
     private val nodes: List<LNode>
     private val failedNames = mutableSetOf<String>()
+    private val brokenNames = mutableSetOf<String>()
 
     class Builder {
         val nodes = mutableListOf<LNode>()
@@ -34,6 +35,19 @@ class Translator private constructor(builder: Builder) {
      * They are left out of the result so they get retried on the next build.
      */
     fun getFailedNames(): Set<String> = failedNames
+
+    /**
+     * Names whose translation came back but lost a placeholder (%1$s, tags): retrying gives the
+     * same result, so they are not retried until their English text changes.
+     */
+    fun getBrokenNames(): Set<String> = brokenNames
+
+    private fun translateOne(lang: String, value: String, isCData: Boolean, name: String): String? =
+        when (val result = NetworkHelper.getTranslationResult(lang, value, isCData)) {
+            is NetworkHelper.Outcome.Done -> result.text
+            NetworkHelper.Outcome.Broken -> { brokenNames.add(name); null }
+            NetworkHelper.Outcome.Failed -> null
+        }
 
     /**
      * Translates only translatable nodes. A node is returned only if all of its parts
@@ -62,7 +76,7 @@ class Translator private constructor(builder: Builder) {
             when (node.type) {
                 NodeType.STRING -> {
                     progress()
-                    val translatedValue = NetworkHelper.getTranslation(lang, node.value, node.isCData)
+                    val translatedValue = translateOne(lang, node.value, node.isCData, node.name)
                     if (translatedValue == null) {
                         failedNames.add(node.name)
                     } else {
@@ -74,7 +88,7 @@ class Translator private constructor(builder: Builder) {
                     var failed = false
                     for ((quantity, value) in node.pluralItems) {
                         progress()
-                        val result = NetworkHelper.getTranslation(lang, value, quantity in node.cdataItems)
+                        val result = translateOne(lang, value, quantity in node.cdataItems, node.name)
                         if (result == null) failed = true else translatedItems[quantity] = result
                     }
                     if (failed) {
@@ -88,7 +102,7 @@ class Translator private constructor(builder: Builder) {
                     var failed = false
                     for ((index, value) in node.arrayItems.withIndex()) {
                         progress()
-                        val result = NetworkHelper.getTranslation(lang, value, index.toString() in node.cdataItems)
+                        val result = translateOne(lang, value, index.toString() in node.cdataItems, node.name)
                         if (result == null) failed = true else translatedItems.add(result)
                     }
                     if (failed) {
@@ -114,17 +128,33 @@ object NetworkHelper {
     @Volatile
     var proxyManager: ProxyManager? = null
 
+    /** The build's useProxy setting: without proxies, a rate limit stops the build. */
+    @Volatile
+    var proxyEnabled: Boolean = false
+
+    /** Google Translate refuses this network for now (HTTP 429) and no proxy is configured. */
+    class RateLimitedException : RuntimeException("Google Translate rate limit (HTTP 429)")
+
+    sealed class Outcome {
+        class Done(val text: String) : Outcome()
+        object Failed : Outcome()
+        object Broken : Outcome()
+    }
+
     private val proxyClients = ConcurrentHashMap<Proxy, OkHttpClient>()
 
     /**
      * Translates one Android string value (as written inside the XML element) and returns it
      * ready to write back into strings.xml, or null if translation failed.
      */
-    fun getTranslation(lang: String, value: String, isCData: Boolean): String? {
+    fun getTranslation(lang: String, value: String, isCData: Boolean): String? =
+        (getTranslationResult(lang, value, isCData) as? Outcome.Done)?.text
+
+    fun getTranslationResult(lang: String, value: String, isCData: Boolean): Outcome {
         val prepared = AndroidText.prepare(value, isCData)
-        if (prepared.skip) return value
-        val translated = requestTranslation(toGoogleLanguage(lang), prepared.text) ?: return null
-        return AndroidText.finish(translated, prepared, isCData)
+        if (prepared.skip) return Outcome.Done(value)
+        val translated = requestTranslation(toGoogleLanguage(lang), prepared.text) ?: return Outcome.Failed
+        return AndroidText.finish(translated, prepared, isCData)?.let { Outcome.Done(it) } ?: Outcome.Broken
     }
 
     private fun requestTranslation(lang: String, text: String): String? {
@@ -155,6 +185,8 @@ object NetworkHelper {
         for (attempt in 1..directAttempts) {
             val result = execute(client, request)
             if (result.text != null) return result.text
+            // Rate limited with no proxy to switch to: retrying only digs deeper, stop the build
+            if (result.code == 429 && !proxyEnabled) throw RateLimitedException()
             println("\n  LokaleNow: ${result.error} for '$lang' (attempt $attempt/$directAttempts)")
             if (attempt < directAttempts) Thread.sleep(1000L * attempt)
         }

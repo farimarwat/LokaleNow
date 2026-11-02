@@ -7,6 +7,7 @@ import com.farimarwat.lokalenow.utils.NetworkHelper
 import com.farimarwat.lokalenow.utils.ProxyManager
 import com.farimarwat.lokalenow.utils.Translator
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -33,6 +34,7 @@ abstract class LokaleNowTask : DefaultTask() {
     @TaskAction
     fun doTranslate() {
         if (!activate) return
+        NetworkHelper.proxyEnabled = useProxy
 
         try {
             for ((name, dir) in modules) {
@@ -45,6 +47,16 @@ abstract class LokaleNowTask : DefaultTask() {
                 println("LokaleNow: Processing module -> $name")
                 processModule(dir.path)
             }
+        } catch (e: NetworkHelper.RateLimitedException) {
+            throw GradleException(
+                "\nLokaleNow: Google Translate is rate-limiting this network (HTTP 429).\n" +
+                    "Too many translation requests were sent from this IP address in a short time, so Google\n" +
+                    "temporarily refuses more (usually for minutes to a few hours). Nothing was lost: strings\n" +
+                    "translated so far are saved, the rest are translated on the next build.\n" +
+                    "Kindly enable the proxy in build.gradle.kts and build again:\n" +
+                    "    lokalenow { useProxy = true }\n" +
+                    "Or set activate = false to build without translating for now."
+            )
         } finally {
             // Gradle daemon keeps objects alive between builds, so always reset
             NetworkHelper.proxyManager?.let { manager ->
@@ -84,14 +96,17 @@ abstract class LokaleNowTask : DefaultTask() {
         val sourceNodes = allNodes.filter { it.translatable }
         val changedNames = ldoc.getChangedNodeNames()
         val failedNames = mutableSetOf<String>()
+        val skipped = SkipList(File(path, PrimaryStringDocument.HASH_DIR_NAME))
 
         languages.forEach { lang ->
             val existing = ldoc.readLocalized(lang)
 
-            // Only new strings, strings whose English text changed, or strings whose type changed
+            // Only new strings, strings whose English text changed, or strings whose type changed,
+            // in this language only; never ones Google can't translate without breaking placeholders
             val nodesToTranslate = sourceNodes.filter { node ->
                 val old = existing[node.name]
-                old == null || old.type != node.type || node.name in changedNames
+                val wanted = old == null || old.type != node.type || node.name in changedNames
+                wanted && !skipped.contains(lang, node)
             }
 
             val translatedByName = if (nodesToTranslate.isEmpty()) {
@@ -103,13 +118,19 @@ abstract class LokaleNowTask : DefaultTask() {
                     .build()
                 val result = translator.translate(lang).associateBy { it.name }
                 failedNames.addAll(translator.getFailedNames())
+                translator.getBrokenNames().forEach { name ->
+                    sourceNodes.firstOrNull { it.name == name }?.let { skipped.add(lang, it) }
+                }
                 result
             }
 
-            // Keep existing translations, replace changed ones, drop deleted ones
+            // Keep existing translations, replace changed ones, drop deleted ones. A changed string
+            // that failed loses its stale translation (English shows), so it's retried next build
             val finalNodes = linkedMapOf<String, LNode>()
             for (node in sourceNodes) {
-                val result = translatedByName[node.name] ?: existing[node.name] ?: continue
+                val result = translatedByName[node.name]
+                    ?: existing[node.name]?.takeIf { node.name !in changedNames }
+                    ?: continue
                 finalNodes[node.name] = result.copy(attributes = node.attributes)
             }
             ldoc.saveLocalized(lang, finalNodes)
@@ -117,7 +138,42 @@ abstract class LokaleNowTask : DefaultTask() {
         if (failedNames.isNotEmpty()) {
             println("  LokaleNow: could not translate ${failedNames.joinToString()}. Will retry on next build.")
         }
-        ldoc.saveHashes(failedNames)
+        skipped.save(sourceNodes)
+        // Every string is recorded as seen: a failure is retried through its missing translation
+        // in that one language, not by marking it changed (which re-translated it in all languages
+        // on every build)
+        ldoc.saveHashes()
+    }
+
+    /**
+     * Strings Google can't translate into a language without losing a placeholder, per language,
+     * remembered until their English text changes: retrying them gives the same broken result.
+     */
+    private class SkipList(dir: File) {
+        private val file = File(dir, "skipped.hash")
+        private val entries: MutableSet<String> =
+            if (file.exists()) file.readLines().filter { it.isNotBlank() }.toMutableSet() else mutableSetOf()
+
+        private fun key(lang: String, node: LNode): String {
+            val hash = when (node.type) {
+                NodeType.STRING -> node.value.hashCode()
+                NodeType.PLURALS -> node.pluralItems.hashCode()
+                NodeType.STRING_ARRAY -> node.arrayItems.hashCode()
+            }
+            return "$lang:${node.name}:$hash"
+        }
+
+        fun contains(lang: String, node: LNode) = key(lang, node) in entries
+        fun add(lang: String, node: LNode) { entries.add(key(lang, node)) }
+
+        /** Keeps only entries still matching a current string. */
+        fun save(nodes: List<LNode>) {
+            val names = nodes.map { it.name }.toSet()
+            val kept = entries.filter { it.split(":").getOrNull(1) in names }
+            if (kept.isEmpty()) { file.delete(); return }
+            file.parentFile.mkdirs()
+            file.writeText(kept.joinToString("\n"))
+        }
     }
 
     /**
