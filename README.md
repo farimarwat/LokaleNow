@@ -8,9 +8,9 @@ plugins {
   ...
   ...
   // for kotlin
-  id("io.github.farimarwat.lokalenow") version "1.18"
+  id("io.github.farimarwat.lokalenow") version "1.19"
   //for groovy
-  id "io.github.farimarwat.lokalenow" version "1.18"
+  id "io.github.farimarwat.lokalenow" version "1.19"
 }
 ```
 
@@ -96,6 +96,10 @@ There is need to handle symbols while translation. If you want to improve the co
 
 
 ## Version History
+**1.19**
+1. Fixed: a string whose new translation broke its placeholders lost its existing translation for good; it now keeps it
+2. Fixed: a string with no saved hash (new to the hash file, e.g. after an upgrade) was treated as changed and lost its existing translation
+
 **1.16**
 1. Minor bugs fixed
 2. Multi-Module translation added

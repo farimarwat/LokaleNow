@@ -125,11 +125,15 @@ abstract class LokaleNowTask : DefaultTask() {
             }
 
             // Keep existing translations, replace changed ones, drop deleted ones. A changed string
-            // that failed loses its stale translation (English shows), so it's retried next build
+            // that failed loses its stale translation (English shows), so it's retried next build.
+            // A skipped one keeps it: it will never be translated again, so dropping it would leave
+            // English for good
             val finalNodes = linkedMapOf<String, LNode>()
             for (node in sourceNodes) {
                 val result = translatedByName[node.name]
-                    ?: existing[node.name]?.takeIf { node.name !in changedNames }
+                    ?: existing[node.name]?.takeIf {
+                        node.name !in changedNames || skipped.contains(lang, node)
+                    }
                     ?: continue
                 finalNodes[node.name] = result.copy(attributes = node.attributes)
             }

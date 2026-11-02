@@ -291,7 +291,9 @@ class PrimaryStringDocument private constructor(builder: Builder) {
                     NodeType.PLURALS -> item.pluralItems.hashCode()
                     NodeType.STRING_ARRAY -> item.arrayItems.hashCode()
                 }
-                if (hash != currentHash) {
+                // No recorded hash means never seen, not changed: a new string is translated
+                // anyway because it has no translation, and an existing translation is kept
+                if (hash != null && hash != currentHash) {
                     list.add(item)
                 }
             }
